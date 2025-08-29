@@ -98,7 +98,7 @@ GRANT ALL PRIVILEGES ON DATABASE cinelist_db TO cinelist_user;
 
 7. Configurar variáveis de ambiente no projeto
 ```
-DATABASE_URL=postgresql+psycopg2://cinelist_user:sua_senha_segura@localhost:5432/cinelist_db
+DATABASE_URL=postgresql://cinelist_user:sua_senha_segura@localhost:5432/cinelist_db
 TMDB_API_KEY=key_do_tmdb
 ANILIST_API_URL=https://graphql.anilist.co 
 ```

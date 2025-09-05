@@ -41,7 +41,7 @@ def get_anime_details(anime_id):
         averageScore
         startDate { year month day }
         episodes
-        status  # <- Novo campo
+        status
       }
     }
     """

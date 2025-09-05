@@ -40,7 +40,7 @@ def search(name: str):
     return {"movies": movies, "series": series, "animes": animes}
 
 # --- POST Avaliação ---
-@media_router.post("/rate/{media_type}/{media_id}", summary="Avalia uma mídia e salva no banco se necessário")
+@media_router.post("/rate/{media_type}/{media_id}", summary="Avalia uma mídia e salva no banco de dados")
 def rate(media_type: str, media_id: int, rating: float, db: Session = Depends(get_db)):
     # --- Validação de faixa de notas ---
     if not 0 <= rating <= 10:

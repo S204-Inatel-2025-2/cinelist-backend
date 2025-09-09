@@ -14,6 +14,9 @@ env/
 .env
 .env.*
 
+# Mas não ignore o arquivo de exemplo
+!.env.example
+
 # Logs
 *.log
 

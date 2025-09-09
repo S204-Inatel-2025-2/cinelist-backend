@@ -50,7 +50,7 @@ git clone https://github.com/S204-Inatel-2025-2/cinelist-backend.git
 
 1. Navegue até o diretório backend:
 ```bash
-cd backend
+cd cinelist-backend
 ```
 
 2. (Opcional) Crie e ative um ambiente virtual:
@@ -94,16 +94,9 @@ CREATE USER cinelist_user WITH PASSWORD 'sua_senha_segura';
 -- Garantir permissões no banco
 GRANT ALL PRIVILEGES ON DATABASE cinelist_db TO cinelist_user;
 ```
-- Substitua sua_senha_segura por uma senha segura e lembre-se de configurá-la no arquivo .env.
+- Substitua sua_senha_segura por uma senha segura e lembre-se de configurá-la no arquivo `.env`.
 
-7. Configurar variáveis de ambiente no projeto
-```
-DATABASE_URL=postgresql://cinelist_user:sua_senha_segura@localhost:5432/cinelist_db
-TMDB_API_KEY=key_do_tmdb
-ANILIST_API_URL=https://graphql.anilist.co 
-```
-
-8. Execute o servidor:
+7. Execute o servidor:
 ```bash
 uvicorn app.main:app --reload
 ```

@@ -24,6 +24,8 @@ cinelist-backend/
 │   │   ├── anime.py
 │   │   ├── movie.py
 │   │   ├── serie.py
+│   ├── schemas/
+│   │   ├── requests.py
 │   ├── services/
 │   │   ├── anilist_service.py
 │   │   ├── tmdb_service.py
@@ -108,22 +110,23 @@ uvicorn app.main:app --reload
 - 📁 routes/: define rotas
 - 📁 models/: define as classes que representam as tabelas do banco de dados usando SQLAlchemy
 - 📁 services/: lógica de negócios
+- 📁 schemas/: definição dos modelos de requisição e validação usando Pydantic
 - 📄 main.py: ponto de entrada da aplicação
 
 
 ### Endpoints principais
 
-| Método | Rota                                      | Descrição                                                    |
-| ------ | ----------------------------------------- | ------------------------------------------------------------ |
-| GET    | /api/animes                               | Lista os 50 animes mais populares                            |
-| GET    | /api/animes/search/{name}                 | Busca animes por nome                                        |
-| GET    | /api/movies                               | Lista os 50 filmes mais populares                            |
-| GET    | /api/movies/search/{name}                 | Busca filmes por nome                                        |
-| GET    | /api/series                               | Lista as 50 séries mais populares                            |
-| GET    | /api/series/search/{name}                 | Busca séries por nome                                        |
-| GET    | /api/media/popular                        | Retorna 20 filmes, 20 séries e 20 animes mais populares      |
-| GET    | /api/media/search/{name}                  | Busca em todas as mídias (filmes, séries e animes) pelo nome |
-| POST   | /api/media/rate/{media\_type}/{media\_id} | Avalia uma mídia e salva no banco se necessário              |
-| PUT    | /api/media/rate/{media\_type}/{media\_id} | Atualiza a avaliação de uma mídia já existente               |
-| DELETE | /api/media/rate/{media\_type}/{media\_id} | Remove a avaliação de uma mídia do banco                     |
+| Método | Rota               | Descrição                                                                           |
+| ------ | ------------------ | ----------------------------------------------------------------------------------- |
+| GET    | /api/animes        | Lista os 50 animes mais populares                                                   |
+| POST   | /api/animes/search | Busca animes por nome usando `SearchRequest`                                        |
+| GET    | /api/movies        | Lista os 50 filmes mais populares                                                   |
+| POST   | /api/movies/search | Busca filmes por nome usando `SearchRequest`                                        |
+| GET    | /api/series        | Lista as 50 séries mais populares                                                   |
+| POST   | /api/series/search | Busca séries por nome usando `SearchRequest`                                        |
+| GET    | /api/media/popular | Retorna 20 filmes, 20 séries e 20 animes mais populares                             |
+| POST   | /api/media/search  | Busca em todas as mídias (filmes, séries e animes) pelo nome usando `SearchRequest` |
+| POST   | /api/media/rate    | Avalia uma mídia e salva no banco se necessário usando `RateRequest`                |
+| PUT    | /api/media/update  | Atualiza a avaliação de uma mídia já existente usando `UpdateRatingRequest`         |
+| DELETE | /api/media/delete  | Remove a avaliação de uma mídia do banco usando `DeleteRequest`                              |
 > Acesse http://localhost:8000/docs para a documentação interativa (Swagger UI).

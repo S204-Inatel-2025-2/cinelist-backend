@@ -15,7 +15,8 @@ class MovieModel(Base):
     runtime = Column(Integer, nullable=True)
     budget = Column(Float, nullable=True)
     revenue = Column(Float, nullable=True)
-    rating = Column(Float, nullable=True) 
+    rating = Column(Float, nullable=True)
+    comment = Column(String, nullable=True) 
 
 # Schema Pydantic
 class MovieItem(BaseModel):
@@ -29,6 +30,7 @@ class MovieItem(BaseModel):
     runtime: int | None = 0
     budget: float | None = 0.0
     revenue: float | None = 0.0
+    comment: str | None = None
 
     class Config:
         from_attributes = True

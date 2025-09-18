@@ -14,6 +14,7 @@ class AnimeModel(Base):
     release_date = Column(String, nullable=True)
     episodes = Column(Integer, nullable=True)
     status = Column(String, nullable=True)
+    comment = Column(String, nullable=True)
 
 # Schema Pydantic
 class AnimeItem(BaseModel):
@@ -24,6 +25,7 @@ class AnimeItem(BaseModel):
     release_date: str | None = None
     episodes: int | None = 0
     status: str | None = None
+    comment: str | None = None
 
     class Config:
         from_attributes = True

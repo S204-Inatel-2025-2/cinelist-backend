@@ -29,11 +29,26 @@ media_router = APIRouter()
 # --- Populares ---
 @media_router.get("/popular", summary="20 filmes, 20 séries e 20 animes mais populares")
 def popular():
-    return {
-        "movies": get_popular_movies(20),
-        "series": get_popular_series(20),
-        "animes": get_top_animes(20)
-    }
+    movies = get_popular_movies(20)
+    series = get_popular_series(20)
+    animes = get_top_animes(20)
+
+    # adiciona o tipo de mídia em cada item
+    for m in movies:
+        m["type"] = "movie"
+    for s in series:
+        s["type"] = "series"
+    for a in animes:
+        a["type"] = "anime"
+
+    # junta tudo
+    all_results = movies + series + animes
+
+    # ordena por popularidade (ajuste a chave conforme o nome real no retorno)
+    sorted_results = sorted(all_results, key=lambda x: x.get("popularity", 0), reverse=True)
+
+    return {"results": sorted_results}
+
 
 # --- Busca ---
 @media_router.post("/search", summary="Busca por nome da mídia")
@@ -41,7 +56,23 @@ def search(req: SearchRequest):
     movies = search_movie(req.name, limit=20)
     series = search_series(req.name, limit=20)
     animes = search_anime(req.name, limit=20)
-    return {"movies": movies, "series": series, "animes": animes}
+
+    # Adiciona o tipo de mídia em cada item
+    for m in movies:
+        m["type"] = "movie"
+    for s in series:
+        s["type"] = "series"
+    for a in animes:
+        a["type"] = "anime"
+
+    # Junta tudo
+    all_results = movies + series + animes
+
+    # Ordena por popularidade (ajuste a chave conforme o nome do campo real)
+    sorted_results = sorted(all_results, key=lambda x: x.get("popularity", 0), reverse=True)
+
+    return {"results": sorted_results}
+
 
 # --- Avaliar mídia ---
 @media_router.post("/rate", summary="Avalia uma mídia e salva no banco de dados")
@@ -80,7 +111,8 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
             rating=rating,
             runtime=data.get("runtime"),
             budget=data.get("budget"),
-            revenue=data.get("revenue")
+            revenue=data.get("revenue"),
+            comment=request.comment
         )
 
     elif media_type == "serie":
@@ -104,6 +136,7 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
             episodes=data.get("number_of_episodes"),
             status=data.get("status"),
             last_episode=data.get("last_air_date"),
+            comment=request.comment
         )
 
     elif media_type == "anime":
@@ -118,7 +151,8 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
             score=rating,
             release_date=data.get("release_date"),
             episodes=data.get("episodes"),
-            status=data.get("status")
+            status=data.get("status"),
+            comment=request.comment
         )
 
     db.add(item)
@@ -149,6 +183,9 @@ def update_rating(request: UpdateRatingRequest, db: Session = Depends(get_db)):
         item.score = rating
     else:
         item.rating = rating
+
+    if request.comment is not None:
+        item.comment = request.comment
 
         if media_type == "serie" and (not getattr(item, "creator") or not item.cast):
             credits = get_series_credits(media_id)

@@ -158,7 +158,7 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
     db.add(item)
     db.commit()
     db.refresh(item)
-    return {"message": f"{media_type} avaliado", "rating": rating, "title": item.title}
+    return {"message": f"{media_type} avaliado", "rating": rating, "title": item.title, "comment": item.comment}
 
 
 # --- Atualizar avaliação ---
@@ -200,7 +200,7 @@ def update_rating(request: UpdateRatingRequest, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(item)
-    return {"message": f"Avaliação de {media_type} atualizada", "rating": rating, "title": item.title}
+    return {"message": f"Avaliação de {media_type} atualizada", "rating": rating, "title": item.title, "comment": item.comment}
 
 
 # --- Deletar avaliação ---

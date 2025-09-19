@@ -24,6 +24,9 @@ cinelist-backend/
 │   │   ├── anime.py
 │   │   ├── movie.py
 │   │   ├── serie.py
+│   │   ├── user.py
+│   │   ├── lista.py
+│   │   ├── lista_item.py
 │   ├── schemas/
 │   │   ├── requests.py
 │   ├── services/
@@ -116,17 +119,23 @@ uvicorn app.main:app --reload
 
 ### Endpoints principais
 
-| Método | Rota               | Descrição                                                                           |
-| ------ | ------------------ | ----------------------------------------------------------------------------------- |
-| GET    | /api/animes        | Lista os 50 animes mais populares                                                   |
-| POST   | /api/animes/search | Busca animes por nome usando `SearchRequest`                                        |
-| GET    | /api/movies        | Lista os 50 filmes mais populares                                                   |
-| POST   | /api/movies/search | Busca filmes por nome usando `SearchRequest`                                        |
-| GET    | /api/series        | Lista as 50 séries mais populares                                                   |
-| POST   | /api/series/search | Busca séries por nome usando `SearchRequest`                                        |
-| GET    | /api/media/popular | Retorna 20 filmes, 20 séries e 20 animes mais populares                             |
-| POST   | /api/media/search  | Busca em todas as mídias (filmes, séries e animes) pelo nome usando `SearchRequest` |
-| POST   | /api/media/rate    | Avalia uma mídia e salva no banco se necessário usando `RateRequest`                |
-| PUT    | /api/media/update  | Atualiza a avaliação de uma mídia já existente usando `UpdateRatingRequest`         |
-| DELETE | /api/media/delete  | Remove a avaliação de uma mídia do banco usando `DeleteRequest`                              |
+| Método | Rota                    | Descrição                                                                           |
+| ------ | ----------------------- | ----------------------------------------------------------------------------------- |
+| GET    | /api/animes             | Lista os 50 animes mais populares                                                   |
+| POST   | /api/animes/search      | Busca animes por nome usando `SearchRequest`                                        |
+| GET    | /api/movies             | Lista os 50 filmes mais populares                                                   |
+| POST   | /api/movies/search      | Busca filmes por nome usando `SearchRequest`                                        |
+| GET    | /api/series             | Lista as 50 séries mais populares                                                   |
+| POST   | /api/series/search      | Busca séries por nome usando `SearchRequest`                                        |
+| GET    | /api/media/popular      | Retorna 20 filmes, 20 séries e 20 animes mais populares                             |
+| POST   | /api/media/search       | Busca em todas as mídias (filmes, séries e animes) pelo nome usando `SearchRequest` |
+| POST   | /api/media/rate         | Avalia uma mídia e salva no banco se necessário usando `RateRequest`                |
+| PUT    | /api/media/update       | Atualiza a avaliação de uma mídia já existente usando `UpdateRatingRequest`         |
+| DELETE | /api/media/delete       | Remove a avaliação de uma mídia do banco usando `DeleteRequest`                     |
+| POST   | /api/listas/create      | Cria uma nova lista para o usuário usando `ListaCreate`                              |
+| POST   | /api/listas/item/add    | Adiciona uma mídia em uma lista usando `ListaItemCreate`                             |
+| DELETE | /api/listas/item/delete | Remove uma mídia de uma lista usando `DeleteItemRequest`                             |
+| POST   | /api/listas/get         | Retorna uma lista com seus itens usando `ListaIdRequest`                             |
+| POST   | /api/listas/user/get    | Retorna todas as listas de um usuário com seus itens usando `UserIdRequest`         |
+| DELETE | /api/listas             | Remove uma lista e todos os itens dela usando `DeleteListRequest`                    |
 > Acesse http://localhost:8000/docs para a documentação interativa (Swagger UI).

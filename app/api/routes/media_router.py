@@ -17,6 +17,7 @@ from app.services.anilist_service import (
 from app.models.movie import MovieModel
 from app.models.serie import SeriesModel
 from app.models.anime import AnimeModel
+from app.models.user import UserModel
 from app.schemas.requests import (
     SearchRequest,
     RateRequest,
@@ -77,7 +78,15 @@ def search(req: SearchRequest):
 # --- Avaliar mídia ---
 @media_router.post("/rate", summary="Avalia uma mídia e salva no banco de dados")
 def rate(request: RateRequest, db: Session = Depends(get_db)):
-    media_type, media_id, rating = request.media_type.lower(), request.media_id, request.rating
+    media_type = request.media_type.lower()
+    media_id = request.media_id
+    rating = request.rating
+    user_id = request.user_id
+
+    # Verifica se o usuário existe
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
     if not 0 <= rating <= 10:
         raise HTTPException(status_code=400, detail="A nota deve estar entre 0 e 10.")
@@ -87,14 +96,21 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Tipo de mídia inválido")
 
     model = model_map[media_type]
-    item = db.query(model).filter(model.id == media_id).first()
 
+    # Verifica se já existe avaliação
+    if media_type == "anime":
+        item = db.query(model).filter(model.anime_id == media_id, model.user_id == user_id).first()
+    elif media_type == "movie":
+        item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
+    else:  # serie
+        item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
     if item:
         raise HTTPException(
             status_code=409,
-            detail=f"{media_type.capitalize()} já foi avaliado. Use PUT para atualizar ou DELETE para remover."
+            detail=f"{media_type.capitalize()} já foi avaliado por este usuário. Use PUT para atualizar ou DELETE para remover."
         )
 
+    # --- Criação do item por tipo ---
     if media_type == "movie":
         data = get_movie_details(media_id)
         credits = get_movie_credits(media_id)
@@ -102,7 +118,7 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
         cast = ", ".join([actor['name'] for actor in credits.get('cast', [])[:10]])
 
         item = MovieModel(
-            id=data["id"],
+            movie_id=data["id"],
             title=data["title"],
             overview=data.get("overview", ""),
             release_date=data.get("release_date"),
@@ -112,7 +128,8 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
             runtime=data.get("runtime"),
             budget=data.get("budget"),
             revenue=data.get("revenue"),
-            comment=request.comment
+            comment=request.comment,
+            user_id=user_id,
         )
 
     elif media_type == "serie":
@@ -126,7 +143,7 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
         cast = ", ".join(cast_list) if cast_list else None
 
         item = SeriesModel(
-            id=data["id"],
+            movie_id=data["id"],
             title=data["name"],
             overview=data.get("overview", ""),
             release_date=data.get("first_air_date"),
@@ -136,7 +153,8 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
             episodes=data.get("number_of_episodes"),
             status=data.get("status"),
             last_episode=data.get("last_air_date"),
-            comment=request.comment
+            comment=request.comment,
+            user_id=user_id,
         )
 
     elif media_type == "anime":
@@ -145,27 +163,42 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
             raise HTTPException(status_code=404, detail="Anime não encontrado na API")
 
         item = AnimeModel(
-            id=data["id"],
+            anime_id=data["id"],
             title=data["title"].get("romaji") or data["title"].get("english") or "Unknown",
             description=data.get("description", ""),
             score=rating,
             release_date=data.get("release_date"),
             episodes=data.get("episodes"),
             status=data.get("status"),
-            comment=request.comment
+            comment=request.comment,
+            user_id=user_id,
         )
 
     db.add(item)
     db.commit()
     db.refresh(item)
-    return {"message": f"{media_type} avaliado", "rating": rating, "title": item.title, "comment": item.comment}
+
+    return {
+        "message": f"{media_type} avaliado",
+        "id": item.id,
+        "title": item.title,
+        "rating": rating,
+        "comment": item.comment,
+        "type": media_type
+    }
 
 
 # --- Atualizar avaliação ---
 @media_router.put("/rate/update", summary="Atualiza a avaliação de uma mídia já existente")
 def update_rating(request: UpdateRatingRequest, db: Session = Depends(get_db)):
-    media_type, media_id, rating = request.media_type.lower(), request.media_id, request.rating
+    media_type = request.media_type.lower()
+    media_id = request.media_id
+    rating = request.rating
+    user_id = request.user_id
 
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
     if not 0 <= rating <= 10:
         raise HTTPException(status_code=400, detail="A nota deve estar entre 0 e 10.")
 
@@ -174,50 +207,71 @@ def update_rating(request: UpdateRatingRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Tipo de mídia inválido")
 
     model = model_map[media_type]
-    item = db.query(model).filter(model.id == media_id).first()
+    
+    if media_type == "anime":
+        item = db.query(model).filter(model.anime_id == media_id, model.user_id == user_id).first()
+    elif media_type == "movie":
+        item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
+    else:  # serie
+        item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
 
     if not item:
-        raise HTTPException(status_code=404, detail=f"{media_type.capitalize()} não encontrado no banco de dados")
+        raise HTTPException(status_code=404, detail=f"{media_type.capitalize()} não encontrado no banco de dados para este usuário")
 
+    # Atualiza nota
     if media_type == "anime":
         item.score = rating
     else:
         item.rating = rating
 
+    # Atualiza comentário
     if request.comment is not None:
         item.comment = request.comment
 
-        if media_type == "serie" and (not getattr(item, "creator") or not item.cast):
-            credits = get_series_credits(media_id)
-            creator = next((p['name'] for p in credits.get('crew', []) if p['job'] == 'Director'), None)
-            if not creator:
-                data = get_series_details(media_id)
-                creator = data.get("created_by")[0]['name'] if data.get("created_by") else None
-            item.creator = creator or getattr(item, "creator")
-
-            cast_list = [actor['name'] for actor in credits.get('cast', [])[:10]]
-            item.cast = ", ".join(cast_list) if cast_list else item.cast
-
     db.commit()
     db.refresh(item)
-    return {"message": f"Avaliação de {media_type} atualizada", "rating": rating, "title": item.title, "comment": item.comment}
+
+    return {
+        "message": f"Avaliação de {media_type} atualizada",
+        "id": item.id,
+        "title": item.title,
+        "rating": rating,
+        "comment": item.comment,
+        "type": media_type
+    }
 
 
 # --- Deletar avaliação ---
 @media_router.delete("/rate/delete", summary="Remove a mídia e sua avaliação do banco")
 def delete_rating(request: DeleteRequest, db: Session = Depends(get_db)):
-    media_type, media_id = request.media_type.lower(), request.media_id
+    media_type = request.media_type.lower()
+    media_id = request.media_id
+    user_id = request.user_id
+
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
     model_map = {"movie": MovieModel, "serie": SeriesModel, "anime": AnimeModel}
     if media_type not in model_map:
         raise HTTPException(status_code=400, detail="Tipo de mídia inválido")
 
     model = model_map[media_type]
-    item = db.query(model).filter(model.id == media_id).first()
-
+    if media_type == "anime":
+        item = db.query(model).filter(model.anime_id == media_id, model.user_id == user_id).first()
+    elif media_type == "movie":
+        item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
+    else:  # serie
+        item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
     if not item:
-        raise HTTPException(status_code=404, detail=f"{media_type.capitalize()} não encontrado no banco de dados")
+        raise HTTPException(status_code=404, detail=f"{media_type.capitalize()} não encontrado no banco de dados para este usuário")
 
     db.delete(item)
     db.commit()
-    return {"message": f"{media_type.capitalize()} removido do banco de dados", "title": item.title}
+
+    return {
+        "message": f"{media_type.capitalize()} removido do banco de dados",
+        "id": media_id,
+        "title": item.title,
+        "type": media_type
+    }

@@ -1,5 +1,6 @@
 # app/models/user.py
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 from app.config import Base
 
 class UserModel(Base):
@@ -9,3 +10,8 @@ class UserModel(Base):
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+
+    # relacionamento com avaliações
+    movie_ratings = relationship("MovieModel", back_populates="user")
+    serie_ratings = relationship("SeriesModel", back_populates="user")
+    anime_ratings = relationship("AnimeModel", back_populates="user")

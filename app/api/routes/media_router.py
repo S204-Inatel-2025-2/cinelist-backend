@@ -1,6 +1,7 @@
 # app/api/routes/media_router.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 from app.config import get_db
 from app.services.tmdb_service import (
     get_popular_movies, get_popular_series,
@@ -18,11 +19,25 @@ from app.models.movie import MovieModel
 from app.models.serie import SeriesModel
 from app.models.anime import AnimeModel
 from app.models.user import UserModel
+from app.models.lista import ListaModel
+from app.models.lista_item import ListaItemModel
 from app.schemas.requests import (
     SearchRequest,
     RateRequest,
     UpdateRatingRequest, 
     DeleteRequest,
+)
+from app.schemas.lista_schema import (
+    ListaCreate, 
+    ListaOut, 
+    ListaWithItens, 
+    ListaItemCreate, 
+    ListaItemOut, 
+    ItemIdRequest, 
+    ListaIdRequest, 
+    UserIdRequest,
+    DeleteItemRequest,
+    DeleteListRequest,
 )
 
 media_router = APIRouter()
@@ -240,7 +255,6 @@ def update_rating(request: UpdateRatingRequest, db: Session = Depends(get_db)):
         "type": media_type
     }
 
-
 # --- Deletar avaliação ---
 @media_router.delete("/rate/delete", summary="Remove a mídia e sua avaliação do banco")
 def delete_rating(request: DeleteRequest, db: Session = Depends(get_db)):
@@ -274,4 +288,127 @@ def delete_rating(request: DeleteRequest, db: Session = Depends(get_db)):
         "id": media_id,
         "title": item.title,
         "type": media_type
+    }
+
+
+# --- Criar lista ---
+@media_router.post("/listas/create", response_model=ListaOut, summary="Cria uma nova lista para o usuário")
+def create_lista(request: ListaCreate, db: Session = Depends(get_db)):
+    # Verifica se o usuário existe
+    user = db.query(UserModel).filter(UserModel.id == request.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    nova_lista = ListaModel(nome=request.nome, user_id=request.user_id)
+    db.add(nova_lista)
+    db.commit()
+    db.refresh(nova_lista)
+    return nova_lista
+
+
+# --- Adicionar item na lista ---
+@media_router.post("/listas/item/add", response_model=ListaItemOut, summary="Adiciona uma mídia em uma lista")
+def add_item(request: ListaItemCreate, db: Session = Depends(get_db)):
+    lista = db.query(ListaModel).filter(ListaModel.id == request.lista_id).first()
+    if not lista:
+        raise HTTPException(status_code=404, detail="Lista não encontrada")
+
+    # Verifica duplicação (não deixar adicionar a mesma mídia duas vezes na mesma lista)
+    existente = db.query(ListaItemModel).filter(
+        ListaItemModel.lista_id == request.lista_id,
+        ListaItemModel.media_id == request.media_id,
+        ListaItemModel.media_type == request.media_type
+    ).first()
+    if existente:
+        raise HTTPException(status_code=409, detail="Essa mídia já está na lista")
+
+    # Obter título da mídia a partir da API
+    if request.media_type == "movie":
+        data = get_movie_details(request.media_id)
+        if not data:
+            raise HTTPException(status_code=404, detail="Filme não encontrado na API")
+        media_title = data.get("title")
+    elif request.media_type == "serie":
+        data = get_series_details(request.media_id)
+        if not data:
+            raise HTTPException(status_code=404, detail="Série não encontrada na API")
+        media_title = data.get("name")
+    elif request.media_type == "anime":
+        data = get_anime_details(request.media_id)
+        if not data:
+            raise HTTPException(status_code=404, detail="Anime não encontrado na API")
+        media_title = data["title"].get("romaji") or data["title"].get("english") or "Unknown"
+    else:
+        raise HTTPException(status_code=400, detail="Tipo de mídia inválido")
+
+    novo_item = ListaItemModel(
+        lista_id=request.lista_id,
+        media_type=request.media_type,
+        media_id=request.media_id,
+        media_title=media_title
+    )
+    db.add(novo_item)
+    db.commit()
+    db.refresh(novo_item)
+    return novo_item
+
+
+# --- Remover item da lista ---
+@media_router.delete("/listas/item/delete", summary="Remove uma mídia de uma lista")
+def delete_item(request: DeleteItemRequest, db: Session = Depends(get_db)):
+    # Verifica se a lista pertence ao usuário
+    lista = db.query(ListaModel).filter(
+        ListaModel.id == request.lista_id,
+        ListaModel.user_id == request.user_id
+    ).first()
+    if not lista:
+        raise HTTPException(status_code=404, detail="Lista não encontrada para este usuário")
+    
+    # Busca o item dentro da lista
+    item = db.query(ListaItemModel).filter(
+        ListaItemModel.lista_id == request.lista_id,
+        ListaItemModel.media_id == request.media_id,
+        ListaItemModel.media_type == request.media_type
+    ).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item não encontrado na lista")
+    
+    db.delete(item)
+    db.commit()
+    return {"message": "Item removido da lista", "media_id": request.media_id,  "media_type": request.media_type, "lista_id": request.lista_id}
+
+
+# --- Obter lista com itens ---
+@media_router.post("/listas/get", response_model=ListaWithItens, summary="Retorna uma lista com seus itens")
+def get_lista(request: ListaIdRequest, db: Session = Depends(get_db)):
+    lista = db.query(ListaModel).filter(ListaModel.id == request.lista_id).first()
+    if not lista:
+        raise HTTPException(status_code=404, detail="Lista não encontrada")
+    return lista
+
+
+# --- Listar todas as listas de um usuário com itens ---
+@media_router.post("/listas/user/get", response_model=List[ListaWithItens], summary="Retorna todas as listas de um usuário com seus itens")
+def get_listas_by_user(request: UserIdRequest, db: Session = Depends(get_db)):
+    listas = db.query(ListaModel).filter(ListaModel.user_id == request.user_id).all()
+    return listas
+
+# --- Deletar lista e todos os itens ---
+@media_router.delete("/listas", summary="Remove uma lista e todos os itens dela")
+def delete_lista(request: DeleteListRequest, db: Session = Depends(get_db)):
+    # Verifica se a lista pertence ao usuário
+    lista = db.query(ListaModel).filter(
+        ListaModel.id == request.lista_id,
+        ListaModel.user_id == request.user_id
+    ).first()
+    if not lista:
+        raise HTTPException(status_code=404, detail="Lista não encontrada para este usuário")
+
+    db.delete(lista)
+    db.commit()
+
+    return {
+        "message": "Lista removida com todos os itens",
+        "lista_id": request.lista_id,
+        "user_id": request.user_id
     }

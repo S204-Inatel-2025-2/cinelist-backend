@@ -15,3 +15,4 @@ class UserModel(Base):
     movie_ratings = relationship("MovieModel", back_populates="user")
     serie_ratings = relationship("SeriesModel", back_populates="user")
     anime_ratings = relationship("AnimeModel", back_populates="user")
+    listas = relationship("ListaModel", back_populates="user", cascade="all, delete-orphan")

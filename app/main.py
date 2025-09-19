@@ -5,6 +5,8 @@ from app.models.user import UserModel
 from app.models.movie import MovieModel
 from app.models.anime import AnimeModel
 from app.models.serie import SeriesModel
+from app.models.lista import ListaModel
+from app.models.lista_item import ListaItemModel
 from app.api.routes.anime_router import anime_router
 from app.api.routes.movie_router import movies_router
 from app.api.routes.serie_router import series_router

@@ -29,6 +29,8 @@ cinelist-backend/
 │   │   ├── lista_item.py
 │   ├── schemas/
 │   │   ├── requests.py
+│   │   ├── user_schema.py
+│   │   ├── lista_schema.py
 │   ├── services/
 │   │   ├── anilist_service.py
 │   │   ├── tmdb_service.py

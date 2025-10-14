@@ -1,5 +1,6 @@
 # app/main.py
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.config import Base, engine
 from app.models.user import UserModel
 from app.models.movie import MovieModel
@@ -16,6 +17,18 @@ from app.api.routes.media_router import media_router
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="CineList API")
+
+origins = [
+    "http://localhost:5173",  # front-end local (Vite)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],             # permite todos os métodos HTTP (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],             # permite todos os headers, incluindo Authorization
+)
 
 # Routers separados por tipo de mídia
 app.include_router(anime_router, prefix="/anime", tags=["Anime"])

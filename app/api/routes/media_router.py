@@ -394,7 +394,7 @@ def get_listas_by_user(request: UserIdRequest, db: Session = Depends(get_db)):
     return listas
 
 # --- Deletar lista e todos os itens ---
-@media_router.delete("/listas", summary="Remove uma lista e todos os itens dela")
+@media_router.delete("/listas/delete", summary="Remove uma lista e todos os itens dela")
 def delete_lista(request: DeleteListRequest, db: Session = Depends(get_db)):
     # Verifica se a lista pertence ao usuário
     lista = db.query(ListaModel).filter(

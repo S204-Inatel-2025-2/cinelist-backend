@@ -56,6 +56,7 @@ def popular():
         s["type"] = "series"
     for a in animes:
         a["type"] = "anime"
+        a["popularity"] = a.get("averageScore", 0)
 
     # junta tudo
     all_results = movies + series + animes
@@ -80,6 +81,7 @@ def search(req: SearchRequest):
         s["type"] = "series"
     for a in animes:
         a["type"] = "anime"
+        a["popularity"] = a.get("averageScore", 0)
 
     # Junta tudo
     all_results = movies + series + animes

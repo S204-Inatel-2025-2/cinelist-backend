@@ -21,6 +21,12 @@ def get_top_animes(limit=50):
         media(type: ANIME, sort: POPULARITY_DESC) {
           id
           title { romaji english }
+          description(asHtml: false)
+          startDate { year month day }
+          coverImage { large medium }
+          bannerImage
+          averageScore
+          genres
         }
       }
     }
@@ -42,6 +48,8 @@ def get_anime_details(anime_id):
         startDate { year month day }
         episodes
         status
+        coverImage { large } # Adicionado
+        bannerImage # Adicionado
       }
     }
     """
@@ -73,6 +81,12 @@ def search_anime(name: str, limit=30):
         media(type: ANIME, search: $search) {
           id
           title { romaji english }
+          description(asHtml: false)
+          startDate { year month day }
+          coverImage { large medium }
+          bannerImage
+          averageScore
+          genres
         }
       }
     }

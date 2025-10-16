@@ -204,6 +204,36 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
         "type": media_type
     }
 
+@media_router.post("/rate/user/get", summary="Obtém todas as mídias avaliadas por um usuário")
+def get_user_ratings(request: UserIdRequest, db: Session = Depends(get_db)):
+    user_id = request.user_id
+
+    # Busca as avaliações em cada tabela, filtrando pelo ID do usuário
+    rated_movies = db.query(MovieModel).filter(MovieModel.user_id == user_id).all()
+    rated_series = db.query(SeriesModel).filter(SeriesModel.user_id == user_id).all()
+    rated_animes = db.query(AnimeModel).filter(AnimeModel.user_id == user_id).all()
+
+    all_ratings = []
+
+    # Processa os filmes, adicionando o tipo e convertendo para um formato adequado
+    for movie in rated_movies:
+        movie_data = {c.name: getattr(movie, c.name) for c in movie.__table__.columns}
+        movie_data["type"] = "movie"
+        all_ratings.append(movie_data)
+
+    # Processa as séries
+    for serie in rated_series:
+        serie_data = {c.name: getattr(serie, c.name) for c in serie.__table__.columns}
+        serie_data["type"] = "serie"
+        all_ratings.append(serie_data)
+
+    # Processa os animes
+    for anime in rated_animes:
+        anime_data = {c.name: getattr(anime, c.name) for c in anime.__table__.columns}
+        anime_data["type"] = "anime"
+        all_ratings.append(anime_data)
+        
+    return {"results": all_ratings}
 
 # --- Atualizar avaliação ---
 @media_router.put("/rate/update", summary="Atualiza a avaliação de uma mídia já existente")

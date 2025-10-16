@@ -62,7 +62,7 @@ def popular():
     all_results = movies + series + animes
 
     # ordena por popularidade (ajuste a chave conforme o nome real no retorno)
-    sorted_results = sorted(all_results, key=lambda x: x.get("popularity", 0), reverse=True)
+    sorted_results = sorted(all_results, key=lambda x: x.get("popularity") or 0, reverse=True)
 
     return {"results": sorted_results}
 
@@ -87,7 +87,7 @@ def search(req: SearchRequest):
     all_results = movies + series + animes
 
     # Ordena por popularidade (ajuste a chave conforme o nome do campo real)
-    sorted_results = sorted(all_results, key=lambda x: x.get("popularity", 0), reverse=True)
+    sorted_results = sorted(all_results, key=lambda x: x.get("popularity") or 0, reverse=True)
 
     return {"results": sorted_results}
 

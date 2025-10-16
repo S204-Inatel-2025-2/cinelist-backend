@@ -8,7 +8,7 @@ from pydantic import BaseModel
 class SeriesModel(Base):
     __tablename__ = "series"
     id = Column(Integer, primary_key=True, autoincrement=True)  # chave interna do banco
-    movie_id = Column(Integer, nullable=False)  # ID vindo da API (AniList)
+    serie_id = Column(Integer, nullable=False)  # ID vindo da API (AniList)
     title = Column(String, nullable=False)
     overview = Column(String, nullable=True)
     release_date = Column(String, nullable=True)

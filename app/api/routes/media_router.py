@@ -53,7 +53,7 @@ def popular():
     for m in movies:
         m["type"] = "movie"
     for s in series:
-        s["type"] = "series"
+        s["type"] = "serie"
     for a in animes:
         a["type"] = "anime"
         a["popularity"] = a.get("averageScore", 0)
@@ -78,7 +78,7 @@ def search(req: SearchRequest):
     for m in movies:
         m["type"] = "movie"
     for s in series:
-        s["type"] = "series"
+        s["type"] = "serie"
     for a in animes:
         a["type"] = "anime"
         a["popularity"] = a.get("averageScore", 0)
@@ -120,7 +120,7 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
     elif media_type == "movie":
         item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
     else:  # serie
-        item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
+        item = db.query(model).filter(model.serie_id == media_id, model.user_id == user_id).first()
     if item:
         raise HTTPException(
             status_code=409,
@@ -160,7 +160,7 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
         cast = ", ".join(cast_list) if cast_list else None
 
         item = SeriesModel(
-            movie_id=data["id"],
+            serie_id=data["id"],
             title=data["name"],
             overview=data.get("overview", ""),
             release_date=data.get("first_air_date"),
@@ -260,7 +260,7 @@ def update_rating(request: UpdateRatingRequest, db: Session = Depends(get_db)):
     elif media_type == "movie":
         item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
     else:  # serie
-        item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
+        item = db.query(model).filter(model.serie_id == media_id, model.user_id == user_id).first()
 
     if not item:
         raise HTTPException(status_code=404, detail=f"{media_type.capitalize()} não encontrado no banco de dados para este usuário")
@@ -308,7 +308,7 @@ def delete_rating(request: DeleteRequest, db: Session = Depends(get_db)):
     elif media_type == "movie":
         item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
     else:  # serie
-        item = db.query(model).filter(model.movie_id == media_id, model.user_id == user_id).first()
+        item = db.query(model).filter(model.serie_id == media_id, model.user_id == user_id).first()
     if not item:
         raise HTTPException(status_code=404, detail=f"{media_type.capitalize()} não encontrado no banco de dados para este usuário")
 

@@ -30,7 +30,8 @@ from app.schemas.requests import (
 from app.schemas.lista_schema import (
     ListaCreate, 
     ListaOut, 
-    ListaWithItens, 
+    ListaWithItens,
+    ListaWithDetailedItens,
     ListaItemCreate, 
     ListaItemOut, 
     ItemIdRequest, 
@@ -332,21 +333,14 @@ def delete_rating(request: DeleteRequest, db: Session = Depends(get_db)):
 # --- Criar lista ---
 @media_router.post("/listas/create", response_model=ListaOut, summary="Cria uma nova lista para o usuário")
 def create_lista(request: ListaCreate, db: Session = Depends(get_db)):
-    # Verifica se o usuário existe
     user = db.query(UserModel).filter(UserModel.id == request.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
-
-    nova_lista = ListaModel(
-        nome=request.nome,
-        description=request.description, 
-        user_id=request.user_id
-    )
+    nova_lista = ListaModel(**request.model_dump())
     db.add(nova_lista)
     db.commit()
     db.refresh(nova_lista)
     return nova_lista
-
 
 # --- Adicionar item na lista ---
 @media_router.post("/listas/item/add", response_model=ListaItemOut, summary="Adiciona uma mídia em uma lista")
@@ -354,8 +348,6 @@ def add_item(request: ListaItemCreate, db: Session = Depends(get_db)):
     lista = db.query(ListaModel).filter(ListaModel.id == request.lista_id).first()
     if not lista:
         raise HTTPException(status_code=404, detail="Lista não encontrada")
-
-    # Verifica duplicação (não deixar adicionar a mesma mídia duas vezes na mesma lista)
     existente = db.query(ListaItemModel).filter(
         ListaItemModel.lista_id == request.lista_id,
         ListaItemModel.media_id == request.media_id,
@@ -364,21 +356,18 @@ def add_item(request: ListaItemCreate, db: Session = Depends(get_db)):
     if existente:
         raise HTTPException(status_code=409, detail="Essa mídia já está na lista")
 
-    # Obter título da mídia a partir da API
+    media_title = ""
     if request.media_type == "movie":
         data = get_movie_details(request.media_id)
-        if not data:
-            raise HTTPException(status_code=404, detail="Filme não encontrado na API")
+        if not data: raise HTTPException(status_code=404, detail="Filme não encontrado na API")
         media_title = data.get("title")
     elif request.media_type == "serie":
         data = get_series_details(request.media_id)
-        if not data:
-            raise HTTPException(status_code=404, detail="Série não encontrada na API")
+        if not data: raise HTTPException(status_code=404, detail="Série não encontrada na API")
         media_title = data.get("name")
     elif request.media_type == "anime":
         data = get_anime_details(request.media_id)
-        if not data:
-            raise HTTPException(status_code=404, detail="Anime não encontrado na API")
+        if not data: raise HTTPException(status_code=404, detail="Anime não encontrado na API")
         media_title = data["title"].get("romaji") or data["title"].get("english") or "Unknown"
     else:
         raise HTTPException(status_code=400, detail="Tipo de mídia inválido")
@@ -394,19 +383,15 @@ def add_item(request: ListaItemCreate, db: Session = Depends(get_db)):
     db.refresh(novo_item)
     return novo_item
 
-
 # --- Remover item da lista ---
 @media_router.delete("/listas/item/delete", summary="Remove uma mídia de uma lista")
 def delete_item(request: DeleteItemRequest, db: Session = Depends(get_db)):
-    # Verifica se a lista pertence ao usuário
     lista = db.query(ListaModel).filter(
         ListaModel.id == request.lista_id,
         ListaModel.user_id == request.user_id
     ).first()
     if not lista:
         raise HTTPException(status_code=404, detail="Lista não encontrada para este usuário")
-    
-    # Busca o item dentro da lista
     item = db.query(ListaItemModel).filter(
         ListaItemModel.lista_id == request.lista_id,
         ListaItemModel.media_id == request.media_id,
@@ -414,43 +399,66 @@ def delete_item(request: DeleteItemRequest, db: Session = Depends(get_db)):
     ).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item não encontrado na lista")
-    
     db.delete(item)
     db.commit()
-    return {"message": "Item removido da lista", "media_id": request.media_id,  "media_type": request.media_type, "lista_id": request.lista_id}
+    return {"message": "Item removido da lista"}
 
-
-# --- Obter lista com itens ---
-@media_router.post("/listas/get", response_model=ListaWithItens, summary="Retorna uma lista com seus itens")
+# --- Obter UMA lista com itens DETALHADOS ---
+@media_router.post("/listas/get", response_model=ListaWithDetailedItens, summary="Retorna uma lista com seus itens detalhados")
 def get_lista(request: ListaIdRequest, db: Session = Depends(get_db)):
     lista = db.query(ListaModel).filter(ListaModel.id == request.lista_id).first()
     if not lista:
         raise HTTPException(status_code=404, detail="Lista não encontrada")
-    return lista
+    
+    detailed_items = []
+    for item in lista.itens:
+        details = None
+        if item.media_type == "movie":
+            details = get_movie_details(item.media_id)
+        
+        elif item.media_type == "serie":
+            details = get_series_details(item.media_id)
+            # 👇 A CORREÇÃO ESTÁ AQUI 👇
+            # Padroniza o campo 'name' da API de séries para o campo 'title' do nosso schema
+            if details and 'name' in details:
+                details['title'] = details['name']
 
+        elif item.media_type == "anime":
+            details = get_anime_details(item.media_id)
+        
+        if details:
+            # Adiciona o 'media_type' que não vem da API externa
+            details['media_type'] = item.media_type
+            detailed_items.append(details)
+    
+    # Monta a resposta final para validação
+    response_data = {
+        "id": lista.id,
+        "nome": lista.nome,
+        "description": lista.description,
+        "user_id": lista.user_id,
+        "itens": detailed_items
+    }
+    
+    return response_data
 
-# --- Listar todas as listas de um usuário com itens ---
-@media_router.post("/listas/user/get", response_model=List[ListaWithItens], summary="Retorna todas as listas de um usuário com seus itens")
+# --- Listar TODAS as listas de um usuário (versão RESUMIDA) ---
+@media_router.post("/listas/user/get", response_model=List[ListaWithItens], summary="Retorna todas as listas de um usuário")
 def get_listas_by_user(request: UserIdRequest, db: Session = Depends(get_db)):
     listas = db.query(ListaModel).filter(ListaModel.user_id == request.user_id).all()
+    if not listas:
+        return []
     return listas
 
 # --- Deletar lista e todos os itens ---
 @media_router.delete("/listas/delete", summary="Remove uma lista e todos os itens dela")
 def delete_lista(request: DeleteListRequest, db: Session = Depends(get_db)):
-    # Verifica se a lista pertence ao usuário
     lista = db.query(ListaModel).filter(
         ListaModel.id == request.lista_id,
         ListaModel.user_id == request.user_id
     ).first()
     if not lista:
         raise HTTPException(status_code=404, detail="Lista não encontrada para este usuário")
-
     db.delete(lista)
     db.commit()
-
-    return {
-        "message": "Lista removida com todos os itens",
-        "lista_id": request.lista_id,
-        "user_id": request.user_id
-    }
+    return {"message": "Lista removida com todos os itens"}

@@ -1,6 +1,6 @@
 # app/schemas/lista_schema.py
 from pydantic import BaseModel, computed_field
-from typing import List, Optional
+from typing import List, Optional, Any, Union
 
 # --- Base ---
 class ListaBase(BaseModel):
@@ -9,49 +9,63 @@ class ListaBase(BaseModel):
 
 # --- Criação ---
 class ListaCreate(ListaBase):
-    user_id: int   # usuário dono da lista
+    user_id: int
 
-# --- Retorno (com itens) ---
+# --- Retorno (sem itens) ---
 class ListaOut(ListaBase):
     id: int
     user_id: int
-
     class Config:
         from_attributes = True
 
-
 # --- Base dos itens ---
 class ListaItemBase(BaseModel):
-    media_type: str   # "movie", "serie", "anime"
-    media_id: int     # id vindo da API externa (TMDB, AniList, etc.)
-    media_title: str  # nome da mídia
-
+    media_type: str
+    media_id: int
+    media_title: str
 
 # --- Criação de item ---
 class ListaItemCreate(BaseModel):
     lista_id: int
-    media_type: str   # "movie", "serie", "anime"
-    media_id: int     # id vindo da API externa (TMDB, AniList, etc.)
-
+    media_type: str
+    media_id: int
 
 # --- Retorno de item ---
 class ListaItemOut(ListaItemBase):
     id: int
     lista_id: int
-
     class Config:
         from_attributes = True
 
-
-# --- Lista com itens dentro ---
+# --- SCHEMA PARA RESUMO (usado em /listas/user/get) ---
+# Esta classe é necessária para listar todas as listas de forma eficiente
 class ListaWithItens(ListaOut):
     itens: List[ListaItemOut] = []
-
     @computed_field
     @property
     def item_count(self) -> int:
         return len(self.itens)
 
+# --- SCHEMA PARA ITEM DETALHADO (usado em /listas/get) ---
+class MediaItemDetailSchema(BaseModel):
+    id: int
+    title: Union[str, dict]
+    name: Optional[str] = None
+    overview: Optional[str] = None
+    description: Optional[str] = None
+    poster_path: Optional[str] = None
+    vote_average: Optional[float] = None
+    media_type: str
+    class Config:
+        from_attributes = True
+
+# --- SCHEMA PARA LISTA DETALHADA (usado em /listas/get) ---
+class ListaWithDetailedItens(ListaOut):
+    itens: List[MediaItemDetailSchema] = []
+    @computed_field
+    @property
+    def item_count(self) -> int:
+        return len(self.itens)
 
 # --- Schemas auxiliares para requests ---
 class ListaIdRequest(BaseModel):
@@ -69,7 +83,6 @@ class DeleteItemRequest(BaseModel):
     media_id: int
     media_type: str
 
-# --- Request para deletar lista ---
 class DeleteListRequest(BaseModel):
     user_id: int
     lista_id: int

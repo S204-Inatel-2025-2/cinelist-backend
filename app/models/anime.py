@@ -7,9 +7,8 @@ from pydantic import BaseModel
 # Modelo SQLAlchemy
 class AnimeModel(Base):
     __tablename__ = "anime"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)  # chave interna do banco
-    anime_id = Column(Integer, nullable=False)  # ID vindo da API (AniList)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    anime_id = Column(Integer, nullable=False)
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
     score = Column(Float, nullable=True)
@@ -17,10 +16,13 @@ class AnimeModel(Base):
     episodes = Column(Integer, nullable=True)
     status = Column(String, nullable=True)
     comment = Column(String, nullable=True)
-
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    user = relationship("UserModel", back_populates="anime_ratings")
 
+    # ADICIONADO: Campos para as imagens
+    poster_path = Column(String, nullable=True)
+    backdrop_path = Column(String, nullable=True)
+    
+    user = relationship("UserModel", back_populates="anime_ratings")
 
 # Schema Pydantic
 class AnimeItem(BaseModel):
@@ -34,6 +36,9 @@ class AnimeItem(BaseModel):
     status: str | None = None
     comment: str | None = None
 
+    # ADICIONADO: Campos para as imagens
+    poster_path: str | None = None
+    backdrop_path: str | None = None
+    
     class Config:
         from_attributes = True
-

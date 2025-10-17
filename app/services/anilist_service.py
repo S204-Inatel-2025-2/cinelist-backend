@@ -70,7 +70,9 @@ def get_anime_details(anime_id):
         "score": 0,
         "release_date": release_date,
         "episodes": media.get("episodes") or 0,
-        "status": media.get("status")
+        "status": media.get("status"),
+        "coverImage": media.get("coverImage"),    # ADICIONADO
+        "bannerImage": media.get("bannerImage"),  # ADICIONADO
     }
 
 # --- Busca por nome ---

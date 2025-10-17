@@ -147,6 +147,8 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
             revenue=data.get("revenue"),
             comment=request.comment,
             user_id=user_id,
+            poster_path=data.get("poster_path"),
+            backdrop_path=data.get("backdrop_path"),
         )
 
     elif media_type == "serie":
@@ -172,6 +174,8 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
             last_episode=data.get("last_air_date"),
             comment=request.comment,
             user_id=user_id,
+            poster_path=data.get("poster_path"),
+            backdrop_path=data.get("backdrop_path"),
         )
 
     elif media_type == "anime":
@@ -189,6 +193,8 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
             status=data.get("status"),
             comment=request.comment,
             user_id=user_id,
+            poster_path=data.get("coverImage", {}).get("large"),
+            backdrop_path=data.get("bannerImage"),
         )
 
     db.add(item)

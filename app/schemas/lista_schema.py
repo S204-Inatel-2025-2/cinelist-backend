@@ -1,10 +1,11 @@
 # app/schemas/lista_schema.py
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, computed_field
+from typing import List, Optional
 
 # --- Base ---
 class ListaBase(BaseModel):
     nome: str
+    description: Optional[str] = None
 
 # --- Criação ---
 class ListaCreate(ListaBase):
@@ -45,6 +46,11 @@ class ListaItemOut(ListaItemBase):
 # --- Lista com itens dentro ---
 class ListaWithItens(ListaOut):
     itens: List[ListaItemOut] = []
+
+    @computed_field
+    @property
+    def item_count(self) -> int:
+        return len(self.itens)
 
 
 # --- Schemas auxiliares para requests ---

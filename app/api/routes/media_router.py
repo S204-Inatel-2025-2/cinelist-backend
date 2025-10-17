@@ -337,7 +337,11 @@ def create_lista(request: ListaCreate, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
-    nova_lista = ListaModel(nome=request.nome, user_id=request.user_id)
+    nova_lista = ListaModel(
+        nome=request.nome,
+        description=request.description, 
+        user_id=request.user_id
+    )
     db.add(nova_lista)
     db.commit()
     db.refresh(nova_lista)

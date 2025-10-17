@@ -8,6 +8,7 @@ class ListaModel(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     nome = Column(String, nullable=False)
+    description = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # relacionamento com UserModel

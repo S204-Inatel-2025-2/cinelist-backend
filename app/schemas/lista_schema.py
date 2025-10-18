@@ -54,6 +54,7 @@ class MediaItemDetailSchema(BaseModel):
     overview: Optional[str] = None
     description: Optional[str] = None
     poster_path: Optional[str] = None
+    backdrop_path: Optional[str] = None
     vote_average: Optional[float] = None
     media_type: str
     class Config:

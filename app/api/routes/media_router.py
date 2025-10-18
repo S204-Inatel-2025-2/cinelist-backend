@@ -180,7 +180,7 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
         )
 
     elif media_type == "anime":
-        data = get_anime_details(media_id)
+        data = get_anime_details(media_id) # Esta função agora retorna os campos padronizados
         if not data:
             raise HTTPException(status_code=404, detail="Anime não encontrado na API")
 
@@ -194,8 +194,8 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
             status=data.get("status"),
             comment=request.comment,
             user_id=user_id,
-            poster_path=data.get("coverImage", {}).get("large"),
-            backdrop_path=data.get("bannerImage"),
+            poster_path=data.get("poster_path"),
+            backdrop_path=data.get("backdrop_path"),
         )
 
     db.add(item)

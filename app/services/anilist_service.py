@@ -48,8 +48,8 @@ def get_anime_details(anime_id):
         startDate { year month day }
         episodes
         status
-        coverImage { large } # Adicionado
-        bannerImage # Adicionado
+        coverImage { large }
+        bannerImage
       }
     }
     """
@@ -62,17 +62,22 @@ def get_anime_details(anime_id):
     release_date = None
     if start_date and start_date.get("year"):
         release_date = f"{start_date['year']}-{start_date.get('month', 1):02d}-{start_date.get('day', 1):02d}"
+    
+    # Extrai a URL da imagem de capa do objeto aninhado
+    cover_image_obj = media.get("coverImage", {}) or {}
+    poster_url = cover_image_obj.get("large")
 
     return {
         "id": media.get("id"),
         "title": media.get("title", {}),
         "description": media.get("description") or "",
-        "score": 0,
+        "vote_average": (media.get("averageScore") or 0) / 10.0,
         "release_date": release_date,
         "episodes": media.get("episodes") or 0,
         "status": media.get("status"),
-        "coverImage": media.get("coverImage"),    # ADICIONADO
-        "bannerImage": media.get("bannerImage"),  # ADICIONADO
+        # 👇 PADRONIZADO PARA O FRONTEND 👇
+        "poster_path": poster_url,          # De 'coverImage.large' para 'poster_path'
+        "backdrop_path": media.get("bannerImage"), # De 'bannerImage' para 'backdrop_path'
     }
 
 # --- Busca por nome ---

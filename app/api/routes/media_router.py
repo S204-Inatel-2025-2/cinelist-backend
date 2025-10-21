@@ -78,8 +78,10 @@ def search(req: SearchRequest):
     # Adiciona o tipo de mídia em cada item
     for m in movies:
         m["type"] = "movie"
+        m["popularity"] = m.get("vote_average", 0)
     for s in series:
         s["type"] = "serie"
+        s["popularity"] = s.get("vote_average", 0)
     for a in animes:
         a["type"] = "anime"
         a["popularity"] = a.get("averageScore", 0)

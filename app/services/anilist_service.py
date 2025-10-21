@@ -85,7 +85,7 @@ def search_anime(name: str, limit=30):
     query = """
     query ($page: Int, $perPage: Int, $search: String) {
       Page(page: $page, perPage: $perPage) {
-        media(type: ANIME, search: $search) {
+        media(type: ANIME, search: $search, sort: [POPULARITY_DESC]) {
           id
           title { romaji english }
           description(asHtml: false)

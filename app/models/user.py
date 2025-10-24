@@ -10,6 +10,7 @@ class UserModel(Base):
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    avatar = Column(String, nullable=False, default='default')
 
     # relacionamento com avaliações
     movie_ratings = relationship("MovieModel", back_populates="user")

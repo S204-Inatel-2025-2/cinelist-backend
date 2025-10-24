@@ -17,3 +17,20 @@ class UserOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Para a requisição de /register
+class UserRegister(BaseModel):
+    name: str
+    email: str
+    password: str
+
+# Para a requisição de /login
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+# Para a resposta padronizada de /login e /register
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserOut

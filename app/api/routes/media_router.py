@@ -358,28 +358,30 @@ def add_item(request: ListaItemCreate, db: Session = Depends(get_db)):
     if existente:
         raise HTTPException(status_code=409, detail="Essa mídia já está na lista")
 
-    media_title = ""
-    if request.media_type == "movie":
-        data = get_movie_details(request.media_id)
-        if not data: raise HTTPException(status_code=404, detail="Filme não encontrado na API")
-        media_title = data.get("title")
-    elif request.media_type == "serie":
-        data = get_series_details(request.media_id)
-        if not data: raise HTTPException(status_code=404, detail="Série não encontrada na API")
-        media_title = data.get("name")
-    elif request.media_type == "anime":
-        data = get_anime_details(request.media_id)
-        if not data: raise HTTPException(status_code=404, detail="Anime não encontrado na API")
-        media_title = data["title"].get("romaji") or data["title"].get("english") or "Unknown"
+    media_title_str = ""
+    if isinstance(request.title, dict):
+        media_title_str = request.title.get("romaji") or request.title.get("english") or "Sem título"
     else:
-        raise HTTPException(status_code=400, detail="Tipo de mídia inválido")
+        media_title_str = request.title or "Sem título"
 
     novo_item = ListaItemModel(
         lista_id=request.lista_id,
         media_type=request.media_type,
         media_id=request.media_id,
-        media_title=media_title
+        
+        # --- Usando os dados do request ---
+        media_title=media_title_str, # O título normalizado
+        poster_path=request.poster_path,
+        backdrop_path=request.backdrop_path,
+        overview=request.overview,
+        vote_average=request.vote_average,
+        
+        # --- Usando os dados de data do request ---
+        release_date=request.release_date,
+        first_air_date=request.first_air_date,
+        startDate=request.startDate
     )
+    
     db.add(novo_item)
     db.commit()
     db.refresh(novo_item)

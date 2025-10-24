@@ -30,6 +30,17 @@ class ListaItemCreate(BaseModel):
     media_type: str
     media_id: int
 
+    title: Union[str, dict] # Pode ser string (TMDB) ou dict (AniList)
+    poster_path: Optional[str] = None
+    backdrop_path: Optional[str] = None
+    overview: Optional[str] = None
+    vote_average: Optional[float] = None
+    
+    # --- CAMPOS DE DATA ADICIONADOS ---
+    release_date: Optional[str] = None
+    first_air_date: Optional[str] = None
+    startDate: Optional[dict] = None
+
 # --- Retorno de item ---
 class ListaItemOut(ListaItemBase):
     id: int
@@ -57,6 +68,9 @@ class MediaItemDetailSchema(BaseModel):
     backdrop_path: Optional[str] = None
     vote_average: Optional[float] = None
     media_type: str
+    release_date: Optional[str] = None
+    first_air_date: Optional[str] = None
+    startDate: Optional[dict] = None
     class Config:
         from_attributes = True
 

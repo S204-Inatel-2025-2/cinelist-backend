@@ -75,7 +75,6 @@ def get_anime_details(anime_id):
         "release_date": release_date,
         "episodes": media.get("episodes") or 0,
         "status": media.get("status"),
-        # 👇 PADRONIZADO PARA O FRONTEND 👇
         "poster_path": poster_url,          # De 'coverImage.large' para 'poster_path'
         "backdrop_path": media.get("bannerImage"), # De 'bannerImage' para 'backdrop_path'
     }

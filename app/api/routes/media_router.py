@@ -1,6 +1,6 @@
 # app/api/routes/media_router.py
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from app.config import get_db
 from app.services.tmdb_service import (
@@ -408,40 +408,40 @@ def delete_item(request: DeleteItemRequest, db: Session = Depends(get_db)):
     return {"message": "Item removido da lista"}
 
 # --- Obter UMA lista com itens DETALHADOS ---
-@media_router.post("/listas/get", response_model=ListaWithDetailedItens, summary="Retorna uma lista com seus itens detalhados")
+@media_router.post("/listas/get", response_model=ListaWithDetailedItens, summary="Retorna uma lista com seus itens já salvos no DB")
 def get_lista(request: ListaIdRequest, db: Session = Depends(get_db)):
-    lista = db.query(ListaModel).filter(ListaModel.id == request.lista_id).first()
+    lista = db.query(ListaModel).options(
+        joinedload(ListaModel.itens)
+    ).filter(ListaModel.id == request.lista_id).first()
+    
     if not lista:
         raise HTTPException(status_code=404, detail="Lista não encontrada")
     
-    detailed_items = []
+    items_from_db = []
     for item in lista.itens:
-        details = None
-        if item.media_type == "movie":
-            details = get_movie_details(item.media_id)
+        item_data = {
+            "id": item.media_id,
+            "media_type": item.media_type,
+            "type": item.media_type,
+            "title": item.media_title,
+            "poster_path": item.poster_path,
+            "backdrop_path": item.backdrop_path,
+            "overview": item.overview,
+            "vote_average": item.vote_average,
+            "release_date": item.release_date,
+            "first_air_date": item.first_air_date,
+            "startDate": item.startDate,
+        }
         
-        elif item.media_type == "serie":
-            details = get_series_details(item.media_id)
-            # 👇 A CORREÇÃO ESTÁ AQUI 👇
-            # Padroniza o campo 'name' da API de séries para o campo 'title' do nosso schema
-            if details and 'name' in details:
-                details['title'] = details['name']
+        items_from_db.append(item_data)
 
-        elif item.media_type == "anime":
-            details = get_anime_details(item.media_id)
-        
-        if details:
-            # Adiciona o 'media_type' que não vem da API externa
-            details['media_type'] = item.media_type
-            detailed_items.append(details)
-    
-    # Monta a resposta final para validação
     response_data = {
         "id": lista.id,
         "nome": lista.nome,
         "description": lista.description,
         "user_id": lista.user_id,
-        "itens": detailed_items
+        "item_count": len(lista.itens),
+        "itens": items_from_db
     }
     
     return response_data

@@ -1,3 +1,4 @@
+# app/services/anilist_service.py
 import requests
 import time     # Necessário para o timestamp do cache
 import hashlib  # Necessário para criar chaves de cache seguras para buscas
@@ -47,10 +48,8 @@ def get_top_animes(limit=50):
     if cache_key in anime_list_cache:
         cached_data, cache_time = anime_list_cache[cache_key]
         if (current_time - cache_time) < CACHE_LIST_DURATION_SECONDS:
-            print(f"Retornando animes populares (limite {limit}) do cache.")
             return cached_data
 
-    print(f"Buscando animes populares (limite {limit}) na API AniList.")
     # Se não está no cache ou expirou, busca na API
     query = """
     query ($page: Int, $perPage: Int) {
@@ -89,10 +88,8 @@ def get_anime_details(anime_id: int):
     if anime_id in anime_details_cache:
         cached_data, cache_time = anime_details_cache[anime_id]
         if (current_time - cache_time) < CACHE_DETAILS_DURATION_SECONDS:
-            print(f"Retornando detalhes do anime {anime_id} do cache.")
             return cached_data
 
-    print(f"Buscando detalhes do anime {anime_id} na API AniList.")
     # Se não está no cache ou expirou, busca na API
     query = """
     query ($id: Int) {
@@ -154,10 +151,8 @@ def search_anime(name: str, limit=30):
     if cache_key in anime_list_cache:
         cached_data, cache_time = anime_list_cache[cache_key]
         if (current_time - cache_time) < CACHE_LIST_DURATION_SECONDS:
-            print(f"Retornando busca por '{name}' (limite {limit}) do cache.")
             return cached_data
 
-    print(f"Buscando animes por '{name}' (limite {limit}) na API AniList.")
     # Se não está no cache ou expirou, busca na API
     query = """
     query ($page: Int, $perPage: Int, $search: String) {

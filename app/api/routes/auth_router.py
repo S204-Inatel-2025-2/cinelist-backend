@@ -9,7 +9,7 @@ from app.core.security import (
     create_access_token, decode_access_token
 )
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter(prefix="/auth", tags=["User"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 

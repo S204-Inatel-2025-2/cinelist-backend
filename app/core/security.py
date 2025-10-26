@@ -1,9 +1,13 @@
 # app/core/security.py
 from datetime import datetime, timedelta
+from pydantic import ValidationError
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from fastapi import HTTPException, status
-from app.schemas.user_schema import UserOut
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from app.config import get_db
+from app.models.user import UserModel
 import os
 from dotenv import load_dotenv
 
@@ -46,3 +50,22 @@ def decode_access_token(token: str):
             detail="Token inválido ou expirado",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    payload = decode_access_token(token)
+    user_id = payload.get("sub")
+    
+    # Validação robusta de user_id
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido: 'sub' não encontrado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user = db.query(UserModel).filter(UserModel.id == int(user_id)).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Usuário não encontrado")
+    return user

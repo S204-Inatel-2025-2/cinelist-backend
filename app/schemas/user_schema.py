@@ -14,6 +14,14 @@ class UserOut(BaseModel):
     class Config:
         from_attributes = True
 
+class UserPublicOut(BaseModel):
+    id: int
+    username: str
+    avatar: str
+
+    class Config:
+        from_attributes = True
+
 # Para a requisição de /register
 class UserRegister(BaseModel):
     name: str

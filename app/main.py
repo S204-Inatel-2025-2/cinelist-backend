@@ -13,6 +13,7 @@ from app.api.routes.movie_router import movies_router
 from app.api.routes.serie_router import series_router
 from app.api.routes.media_router import media_router
 from app.api.routes.auth_router import router as auth_router
+from app.api.routes.users_router import users_router
 
 # Cria todas as tabelas no banco (caso não existam)
 Base.metadata.create_all(bind=engine)
@@ -40,6 +41,7 @@ app.include_router(series_router, prefix="/series", tags=["Series"])
 app.include_router(media_router, prefix="/media", tags=["Media"])
 
 app.include_router(auth_router)
+app.include_router(users_router, prefix="/users", tags=["Users"])
 
 @app.get("/")
 def root():

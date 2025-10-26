@@ -127,7 +127,7 @@ def rate(request: RateRequest, db: Session = Depends(get_db)):
     if item:
         raise HTTPException(
             status_code=409,
-            detail=f"{media_type.capitalize()} já foi avaliado por este usuário. Use PUT para atualizar ou DELETE para remover."
+            detail=f"{media_type.capitalize()} já foi avaliado por este usuário. Atualize ou delete a avaliação pelo Perfil."
         )
 
     # --- Criação do item por tipo ---

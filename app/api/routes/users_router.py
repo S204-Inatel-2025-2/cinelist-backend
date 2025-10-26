@@ -1,4 +1,4 @@
-# app/routers/users_router.py
+# app/api/routes/users_router.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -21,3 +21,19 @@ def get_all_users(
     ).order_by(UserModel.username).all()
     
     return users
+
+@users_router.get("/{user_id}", response_model=UserPublicOut)
+def get_user_by_id(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user) # Garante que só usuários logados vejam
+):
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuário não encontrado"
+        )
+        
+    return user

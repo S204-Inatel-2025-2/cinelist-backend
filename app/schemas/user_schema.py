@@ -5,6 +5,9 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserUpdateUsername(BaseModel):
+    username: str
+
 class UserOut(BaseModel):
     id: int
     username: str

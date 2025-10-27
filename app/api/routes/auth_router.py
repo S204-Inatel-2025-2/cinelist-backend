@@ -9,7 +9,7 @@ from app.models.serie import SeriesModel
 from app.models.lista import ListaModel
 from app.models.lista_item import ListaItemModel
 from app.schemas.user_schema import (
-    UserOut, UserRegister, UserLogin, TokenResponse, UserUpdateAvatar
+    UserOut, UserRegister, UserLogin, TokenResponse, UserUpdateAvatar, UserUpdateUsername
 )
 from app.core.security import (
     get_password_hash, verify_password,
@@ -21,9 +21,16 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 # --- Registro ---
 @router.post("/register", response_model=TokenResponse) # <- Retorna TokenResponse
 def register_user(user_data: UserRegister, db: Session = Depends(get_db)): # <- Aceita UserRegister
-    existing_user = db.query(UserModel).filter(UserModel.email == user_data.email).first()
-    if existing_user:
+    existing_user_email = db.query(UserModel).filter(UserModel.email == user_data.email).first()
+    if existing_user_email:
         raise HTTPException(status_code=400, detail="Email já cadastrado")
+
+    existing_user_username = db.query(UserModel).filter(UserModel.username == user_data.name).first()
+    if existing_user_username:
+        raise HTTPException(status_code=400, detail="Nome de usuário já cadastrado")
+    
+    if len(user_data.name) < 3:
+        raise HTTPException(status_code=400, detail="Nome de usuário não tem o mínimo de caracteres")
 
     hashed_password = get_password_hash(user_data.password)
     
@@ -138,3 +145,41 @@ def delete_current_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Não foi possível deletar a conta: {e}"
         )
+    
+@router.put("/me/username", response_model=UserOut)
+def update_username(
+    user_data: UserUpdateUsername,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
+    existing_user = db.query(UserModel).filter(
+        UserModel.username == user_data.username,
+        UserModel.id != current_user.id
+    ).first()
+
+    if len(user_data.username) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O nome de usuário deve ter pelo menos 3 caracteres."
+        )
+
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nome de usuário já em uso. Escolha outro."
+        )
+    
+    current_user.username = user_data.username
+    
+    try:
+        db.add(current_user)
+        db.commit()
+        db.refresh(current_user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao salvar o nome de usuário: {e}"
+        )
+        
+    return current_user

@@ -9,7 +9,7 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Cria o engine do SQLAlchemy que representa a conexão com o banco de dados
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # Fábrica de sessões ligados ao engine
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

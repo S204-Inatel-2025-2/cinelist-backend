@@ -1,56 +1,44 @@
 # app/services/anilist_service.py
 import requests
-import time     # Necessário para o timestamp do cache
-import hashlib  # Necessário para criar chaves de cache seguras para buscas
+import hashlib 
+from app.core.cache import get_from_cache, set_to_cache
 
 ANILIST_URL = "https://graphql.anilist.co"
 
-# --- Cache em memória e Duração ---
-# Cache para detalhes individuais
-anime_details_cache = {}
-# Cache para listas (populares, busca)
-anime_list_cache = {}
-# Duração para listas (5 minutos)
-CACHE_LIST_DURATION_SECONDS = 300
-# Duração para detalhes (1 hora)
-CACHE_DETAILS_DURATION_SECONDS = 3600
+# --- Duração do Cache ---
+CACHE_LIST_TTL = 300      # 5 minutos para listas (populares, busca)
+CACHE_DETAILS_TTL = 3600  # 1 hora para detalhes individuais
 
-# --- Função _post_query com checagem de erros GraphQL ---
 def _post_query(query: str, variables: dict):
     """Faz a requisição POST para a API GraphQL da AniList."""
     try:
         response = requests.post(ANILIST_URL, json={"query": query, "variables": variables})
-        response.raise_for_status() # Lança erro para status HTTP 4xx/5xx
+        response.raise_for_status()
         data = response.json()
 
-        # Verifica se a resposta contém a chave 'errors'
         if "errors" in data:
             error_message = data["errors"][0].get("message", "Erro desconhecido na API AniList")
             print(f"Erro GraphQL AniList: {error_message}")
-            return {} # Retorna dicionário vazio para sinalizar falha GraphQL
+            return {} 
 
         return data.get("data", {})
 
     except requests.exceptions.RequestException as e:
         print(f"Erro na requisição AniList (HTTP): {e}")
-        return {} # Retorna dicionário vazio em caso de erro de rede/HTTP
-    except Exception as e: # Captura outros erros (ex: JSON inválido)
+        return {}
+    except Exception as e:
         print(f"Erro inesperado ao processar resposta AniList: {e}")
         return {}
 
-# --- Populares (COM CACHING) ---
+# --- Populares ---
 def get_top_animes(limit=50):
-    """Busca os animes mais populares, usando cache."""
-    current_time = time.time()
-    cache_key = f"top_animes_{limit}"
+    """Busca os animes mais populares, usando cache Redis."""
+    cache_key = f"anilist:top_animes:{limit}"
 
-    # Verifica o cache de listas
-    if cache_key in anime_list_cache:
-        cached_data, cache_time = anime_list_cache[cache_key]
-        if (current_time - cache_time) < CACHE_LIST_DURATION_SECONDS:
-            return cached_data
+    cached_data = get_from_cache(cache_key)
+    if cached_data:
+        return cached_data
 
-    # Se não está no cache ou expirou, busca na API
     query = """
     query ($page: Int, $perPage: Int) {
       Page(page: $page, perPage: $perPage) {
@@ -68,29 +56,24 @@ def get_top_animes(limit=50):
     }
     """
     variables = {"page": 1, "perPage": limit}
-    # Chama a função _post_query atualizada
     raw_data = _post_query(query, variables)
     page_data = raw_data.get("Page", {})
     results = page_data.get("media", []) if page_data else []
 
-    # Armazena a lista de resultados no cache (apenas se a busca foi bem-sucedida)
-    if results: # Só armazena se não houve erro e retornou resultados
-        anime_list_cache[cache_key] = (results, current_time)
+    if results:
+        set_to_cache(cache_key, results, CACHE_LIST_TTL)
 
     return results
 
-# --- Detalhes individuais (COM CACHING) ---
+# --- Detalhes individuais ---
 def get_anime_details(anime_id: int):
-    """Busca detalhes de um anime, usando cache em memória com TTL."""
-    current_time = time.time()
+    """Busca detalhes de um anime, usando cache Redis com TTL."""
+    cache_key = f"anilist:details:{anime_id}"
+    
+    cached_data = get_from_cache(cache_key)
+    if cached_data:
+        return cached_data
 
-    # Verifica o Cache de detalhes
-    if anime_id in anime_details_cache:
-        cached_data, cache_time = anime_details_cache[anime_id]
-        if (current_time - cache_time) < CACHE_DETAILS_DURATION_SECONDS:
-            return cached_data
-
-    # Se não está no cache ou expirou, busca na API
     query = """
     query ($id: Int) {
       Media(id: $id, type: ANIME) {
@@ -106,15 +89,13 @@ def get_anime_details(anime_id: int):
       }
     }
     """
-    # Chama _post_query atualizada
     raw_data = _post_query(query, {"id": anime_id})
     media = raw_data.get("Media")
 
-    # Se a API retornou erro ou não encontrou, retorna None (e não cacheia)
     if not media:
-        return None
+        return None # Não armazena nada no cache se não encontrar
 
-    # Processa os Dados (como antes)
+    # Processa os Dados
     start_date = media.get("startDate")
     release_date = None
     if start_date and start_date.get("year"):
@@ -135,25 +116,20 @@ def get_anime_details(anime_id: int):
         "backdrop_path": media.get("bannerImage"),
     }
 
-    # Armazena no Cache de detalhes
-    anime_details_cache[anime_id] = (processed_details, current_time)
+    set_to_cache(cache_key, processed_details, CACHE_DETAILS_TTL)
 
     return processed_details
 
-# --- Busca por nome (COM CACHING) ---
+# --- Busca por nome ---
 def search_anime(name: str, limit=30):
-    """Busca animes por nome, usando cache."""
-    current_time = time.time()
+    """Busca animes por nome, usando cache Redis."""
     search_hash = hashlib.sha256(name.encode('utf-8')).hexdigest()
-    cache_key = f"search_anime_{search_hash}_{limit}"
+    cache_key = f"anilist:search:{search_hash}:{limit}"
 
-    # Verifica o cache de listas
-    if cache_key in anime_list_cache:
-        cached_data, cache_time = anime_list_cache[cache_key]
-        if (current_time - cache_time) < CACHE_LIST_DURATION_SECONDS:
-            return cached_data
+    cached_data = get_from_cache(cache_key)
+    if cached_data:
+        return cached_data
 
-    # Se não está no cache ou expirou, busca na API
     query = """
     query ($page: Int, $perPage: Int, $search: String) {
       Page(page: $page, perPage: $perPage) {
@@ -171,13 +147,11 @@ def search_anime(name: str, limit=30):
     }
     """
     variables = {"page": 1, "perPage": limit, "search": name}
-    # Chama _post_query atualizada
     raw_data = _post_query(query, variables)
     page_data = raw_data.get("Page", {})
     results = page_data.get("media", []) if page_data else []
 
-    # Armazena a lista de resultados no cache (apenas se a busca foi bem-sucedida)
-    if results: # Só armazena se não houve erro e retornou resultados
-        anime_list_cache[cache_key] = (results, current_time)
+    if results:
+        set_to_cache(cache_key, results, CACHE_LIST_TTL)
 
     return results

@@ -22,6 +22,7 @@ app = FastAPI(title="CineList API")
 
 origins = [
     "http://localhost:5173",  # front-end local (Vite)
+    "https://cinelistf.vercel.app"# front-end no vercel
 ]
 
 app.add_middleware(

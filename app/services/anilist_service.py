@@ -33,7 +33,7 @@ def _post_query(query: str, variables: dict):
 # --- Populares ---
 def get_top_animes(limit=50):
     """Busca os animes mais populares, usando cache Redis."""
-    cache_key = f"anilist:top_animes:{limit}"
+    cache_key = f"anilist:trending_animes:{limit}"
 
     cached_data = get_from_cache(cache_key)
     if cached_data:
@@ -42,7 +42,7 @@ def get_top_animes(limit=50):
     query = """
     query ($page: Int, $perPage: Int) {
       Page(page: $page, perPage: $perPage) {
-        media(type: ANIME, sort: POPULARITY_DESC) {
+        media(type: ANIME, sort: TRENDING_DESC) {
           id
           title { romaji english }
           description(asHtml: false)

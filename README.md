@@ -158,7 +158,7 @@ uvicorn app.main:app --reload
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
 | `POST` | `/api/media/listas/create` | Cria uma nova lista vazia (`ListaCreate`). |
-| `POST` | `/api/media/listas/get` | Retorna os detalhes e itens de uma lista específica (`ListaIdRequest`). |
+| `POST` | `/api/media/listas/get` | Retorna os detalhes e itens de uma lista (`ListaIdRequest`). |
 | `POST` | `/api/media/listas/user/get` | Retorna todas as listas de um usuário (`UserIdRequest`). |
 | `DELETE` | `/api/media/listas/delete` | Deleta uma lista e todos os seus itens (`DeleteListRequest`). |
 | `POST` | `/api/media/listas/item/add` | Adiciona uma mídia dentro de uma lista (`ListaItemCreate`). |

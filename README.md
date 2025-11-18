@@ -123,7 +123,7 @@ uvicorn app.main:app --reload
 - 📁 models/: define as classes que representam as tabelas do banco de dados usando SQLAlchemy
 - 📁 services/: lógica de negócios
 - 📁 schemas/: definição dos modelos de requisição e validação usando Pydantic
-- 📁 croe/: gerenciamento do cache, autenticação e segurança da API
+- 📁 core/: gerenciamento do cache, autenticação e segurança da API
 - 📄 main.py: ponto de entrada da aplicação
 
 

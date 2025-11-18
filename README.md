@@ -8,7 +8,9 @@ O backend do CineList é uma API RESTful construída com FastAPI, que gerencia f
 - [Pydantic](https://docs.pydantic.dev/latest)
 - [Uvicorn](https://www.uvicorn.org)
 - [PostgreSQL](https://www.postgresql.org)
+- [Redis](https://redis.io)
 - [SQLAlchemy](https://www.sqlalchemy.org)
+- [JWT](https://www.jwt.io)
 
 ## Estrutura das pastas
 ```
@@ -17,9 +19,14 @@ cinelist-backend/
 │   ├── api/
 │   │   ├── routes/
 │   │   │   ├── anime_router.py
+│   │   │   ├── auth_router.py
 │   │   │   ├── media_router.py
 │   │   │   ├── movie_router.py
 │   │   │   ├── serie_router.py
+│   │   │   ├── users_router.py
+│   ├── core/
+│   │   ├── cache.py
+│   │   ├── security.py
 │   ├── models/
 │   │   ├── anime.py
 │   │   ├── movie.py
@@ -116,28 +123,55 @@ uvicorn app.main:app --reload
 - 📁 models/: define as classes que representam as tabelas do banco de dados usando SQLAlchemy
 - 📁 services/: lógica de negócios
 - 📁 schemas/: definição dos modelos de requisição e validação usando Pydantic
+- 📁 croe/: gerenciamento do cache, autenticação e segurança da API
 - 📄 main.py: ponto de entrada da aplicação
 
 
-### Endpoints principais
+## API Endpoints
 
-| Método | Rota                    | Descrição                                                                           |
-| ------ | ----------------------- | ----------------------------------------------------------------------------------- |
-| GET    | /api/animes             | Lista os 50 animes mais populares                                                   |
-| POST   | /api/animes/search      | Busca animes por nome usando `SearchRequest`                                        |
-| GET    | /api/movies             | Lista os 50 filmes mais populares                                                   |
-| POST   | /api/movies/search      | Busca filmes por nome usando `SearchRequest`                                        |
-| GET    | /api/series             | Lista as 50 séries mais populares                                                   |
-| POST   | /api/series/search      | Busca séries por nome usando `SearchRequest`                                        |
-| GET    | /api/media/popular      | Retorna 20 filmes, 20 séries e 20 animes mais populares                             |
-| POST   | /api/media/search       | Busca em todas as mídias (filmes, séries e animes) pelo nome usando `SearchRequest` |
-| POST   | /api/media/rate         | Avalia uma mídia e salva no banco se necessário usando `RateRequest`                |
-| PUT    | /api/media/update       | Atualiza a avaliação de uma mídia já existente usando `UpdateRatingRequest`         |
-| DELETE | /api/media/delete       | Remove a avaliação de uma mídia do banco usando `DeleteRequest`                     |
-| POST   | /api/listas/create      | Cria uma nova lista para o usuário usando `ListaCreate`                              |
-| POST   | /api/listas/item/add    | Adiciona uma mídia em uma lista usando `ListaItemCreate`                             |
-| DELETE | /api/listas/item/delete | Remove uma mídia de uma lista usando `DeleteItemRequest`                             |
-| POST   | /api/listas/get         | Retorna uma lista com seus itens usando `ListaIdRequest`                             |
-| POST   | /api/listas/user/get    | Retorna todas as listas de um usuário com seus itens usando `UserIdRequest`         |
-| DELETE | /api/listas             | Remove uma lista e todos os itens dela usando `DeleteListRequest`                    |
-> Acesse http://localhost:8000/docs para a documentação interativa (Swagger UI).
+### 🔐 Autenticação & Usuários
+
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Registra um novo usuário e retorna o token (`UserRegister`). |
+| `POST` | `/api/auth/login` | Realiza login e retorna o token de acesso (`UserLogin`). |
+| `GET` | `/api/auth/me` | Retorna o perfil do usuário autenticado. |
+| `PUT` | `/api/auth/me/avatar` | Atualiza o avatar do usuário autenticado (`UserUpdateAvatar`). |
+| `PUT` | `/api/auth/me/username` | Atualiza o nome de usuário (`UserUpdateUsername`). |
+| `DELETE` | `/api/auth/me` | Exclui a conta do usuário logado e todos os seus dados. |
+| `GET` | `/api/users/get` | Lista todos os usuários da plataforma (exceto o logado). |
+| `GET` | `/api/users/{user_id}` | Retorna o perfil público de um usuário específico pelo ID. |
+
+### 🎬 Mídia (Geral e Avaliações)
+
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `GET` | `/api/media/popular` | Retorna um mix das 20 mídias mais populares de cada categoria. |
+| `POST` | `/api/media/search` | Busca global em Filmes, Séries e Animes (`SearchRequest`). |
+| `POST` | `/api/media/rate` | Avalia/Salva uma mídia no banco de dados (`RateRequest`). |
+| `POST` | `/api/media/rate/user/get` | Retorna todas as mídias avaliadas por um usuário (`UserIdRequest`). |
+| `PUT` | `/api/media/rate/update` | Atualiza a nota ou comentário de uma avaliação (`UpdateRatingRequest`). |
+| `DELETE` | `/api/media/rate/delete` | Remove uma avaliação e a mídia do banco (`DeleteRequest`). |
+
+### 📝 Listas Personalizadas
+
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/api/media/listas/create` | Cria uma nova lista vazia (`ListaCreate`). |
+| `POST` | `/api/media/listas/get` | Retorna os detalhes e itens de uma lista específica (`ListaIdRequest`). |
+| `POST` | `/api/media/listas/user/get` | Retorna todas as listas de um usuário (`UserIdRequest`). |
+| `DELETE` | `/api/media/listas/delete` | Deleta uma lista e todos os seus itens (`DeleteListRequest`). |
+| `POST` | `/api/media/listas/item/add` | Adiciona uma mídia dentro de uma lista (`ListaItemCreate`). |
+| `DELETE` | `/api/media/listas/item/delete` | Remove um item específico de uma lista (`DeleteItemRequest`). |
+
+### 📺 Catálogo Específico
+
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `GET` | `/api/animes` | Top 50 Animes populares. |
+| `POST` | `/api/animes/search` | Busca específica de Animes (`SearchRequest`). |
+| `GET` | `/api/movies` | Top 50 Filmes populares. |
+| `POST` | `/api/movies/search` | Busca específica de Filmes (`SearchRequest`). |
+| `GET` | `/api/series` | Top 50 Séries populares. |
+| `POST` | `/api/series/search` | Busca específica de Séries (`SearchRequest`). |
+> Acesse https://cinelist-backend-production.up.railway.app/docs para a documentação interativa (Swagger UI).

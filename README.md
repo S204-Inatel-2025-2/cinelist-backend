@@ -174,4 +174,3 @@ uvicorn app.main:app --reload
 | `POST` | `/api/movies/search` | Busca específica de Filmes (`SearchRequest`). |
 | `GET` | `/api/series` | Top 50 Séries populares. |
 | `POST` | `/api/series/search` | Busca específica de Séries (`SearchRequest`). |
-> Acesse https://cinelist-backend-production.up.railway.app/docs para a documentação interativa (Swagger UI).

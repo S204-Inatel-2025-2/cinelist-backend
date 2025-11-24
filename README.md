@@ -8,6 +8,7 @@ O backend do CineList é uma API RESTful construída com FastAPI, que gerencia f
 - [Pydantic](https://docs.pydantic.dev/latest)
 - [Uvicorn](https://www.uvicorn.org)
 - [PostgreSQL](https://www.postgresql.org)
+- [Supabase](https://supabase.com)
 - [Redis](https://redis.io)
 - [SQLAlchemy](https://www.sqlalchemy.org)
 - [JWT](https://www.jwt.io)

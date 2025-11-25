@@ -1,6 +1,23 @@
 # Cinelist Backend
 
-O backend do CineList é uma API RESTful construída com FastAPI, que gerencia filmes, séries e animes. Integra PostgreSQL via SQLAlchemy, valida dados com Pydantic e consome informações externas de TMDB e AniList. Permite listagem, busca e avaliação de mídias, garantindo dados consistentes e performance com Uvicorn.
+Uma API completa para gestão de listas, avaliações e catálogo de filmes, séries e animes, integrada a TMDB e AniList.
+
+---
+
+## Sobre o Projeto
+
+O **CineList** é uma plataforma para explorar, avaliar e organizar mídias de diferentes categorias.  
+A API oferece recursos para:
+
+- Buscar filmes, séries e animes  
+- Obter detalhes com base em APIs externas  
+- Criar listas personalizadas  
+- Atribuir notas e comentários  
+- Gerenciar usuários e perfis  
+- Fazer upload de avatar  
+
+O objetivo é fornecer uma base sólida e extensível para aplicações de catálogo multimídia.
+
 
 ## Tecnologias Utilizadas
 
@@ -175,3 +192,19 @@ uvicorn app.main:app --reload
 | `POST` | `/api/movies/search` | Busca específica de Filmes (`SearchRequest`). |
 | `GET` | `/api/series` | Top 50 Séries populares. |
 | `POST` | `/api/series/search` | Busca específica de Séries (`SearchRequest`). |
+
+
+## Banco de Dados
+
+### Principais tabelas:
+
+- users
+- media_items
+- ratings
+- lists
+- list_items
+
+
+## Licença
+
+Este projeto está sob a licença [MIT](https://github.com/S204-Inatel-2025-2/cinelist-backend/blob/main/LICENSE).

@@ -1,0 +1,520 @@
+{
+	"info": {
+		"_postman_id": "2b5921b4-c34a-4ce5-9478-2d6415eb50f7",
+		"name": "Cinelist - Auth",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44926338",
+		"_collection_link": "https://interstellar-satellite-9627242.postman.co/workspace/Marcus-Vin%C3%ADcius's-Workspace~855b6e5c-4ec4-416d-827e-181b42c7a1aa/collection/44926338-2b5921b4-c34a-4ce5-9478-2d6415eb50f7?action=share&source=collection_link&creator=44926338"
+	},
+	"item": [
+		{
+			"name": "Registrar Usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const registerData = pm.response.json();\r",
+							"\r",
+							"// Status\r",
+							"pm.test(\"Status 200 ou 201\", () => {\r",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+							"});\r",
+							"\r",
+							"// Token existe\r",
+							"pm.test(\"Token existe\", () => {\r",
+							"    pm.expect(registerData.access_token).to.be.a(\"string\");\r",
+							"});\r",
+							"\r",
+							"// User existe\r",
+							"pm.test(\"User existe\", () => {\r",
+							"    pm.expect(registerData.user).to.be.an(\"object\");\r",
+							"});\r",
+							"\r",
+							"// Campos básicos do user\r",
+							"pm.test(\"User possui id/username/email/avatar\", () => {\r",
+							"    pm.expect(registerData.user).to.have.property(\"id\");\r",
+							"    pm.expect(registerData.user).to.have.property(\"username\");\r",
+							"    pm.expect(registerData.user).to.have.property(\"email\");\r",
+							"    pm.expect(registerData.user).to.have.property(\"avatar\");\r",
+							"});\r",
+							"\r",
+							"// Salvar token\r",
+							"pm.environment.set(\"token\", registerData.access_token);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Dalva\",\r\n  \"email\": \"D@gmail.com\",\r\n  \"password\": \"senha123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/auth/register",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"auth",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login de usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Converte resposta em JSON\r",
+							"const loginData = pm.response.json();\r",
+							"\r",
+							"// ===============================\r",
+							"// 1. Status HTTP\r",
+							"// ===============================\r",
+							"pm.test(\"Status code é 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 2. access_token existe e é string\r",
+							"// ===============================\r",
+							"pm.test(\"Possui access_token válido\", function () {\r",
+							"    pm.expect(loginData).to.have.property(\"access_token\");\r",
+							"    pm.expect(loginData.access_token).to.be.a(\"string\").and.not.empty;\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 3. token_type existe e é string\r",
+							"// ===============================\r",
+							"pm.test(\"token_type existe e é válido\", function () {\r",
+							"    pm.expect(loginData).to.have.property(\"token_type\");\r",
+							"    pm.expect(loginData.token_type).to.be.a(\"string\").and.not.empty;\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 4. Verifica se o campo 'user' existe\r",
+							"// ===============================\r",
+							"pm.test(\"Campo user existe\", function () {\r",
+							"    pm.expect(loginData).to.have.property(\"user\");\r",
+							"    pm.expect(loginData.user).to.be.an(\"object\");\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 5. Verifica estrutura de user\r",
+							"// ===============================\r",
+							"pm.test(\"User possui id, username, email e avatar\", function () {\r",
+							"    pm.expect(loginData.user).to.have.property(\"id\");\r",
+							"    pm.expect(loginData.user).to.have.property(\"username\");\r",
+							"    pm.expect(loginData.user).to.have.property(\"email\");\r",
+							"    pm.expect(loginData.user).to.have.property(\"avatar\");\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 6. Verifica tipos dos campos de user\r",
+							"// ===============================\r",
+							"pm.test(\"Tipos dos campos do usuário estão corretos\", function () {\r",
+							"    pm.expect(loginData.user.id).to.be.a(\"number\");\r",
+							"    pm.expect(loginData.user.username).to.be.a(\"string\");\r",
+							"    pm.expect(loginData.user.email).to.be.a(\"string\");\r",
+							"    pm.expect(loginData.user.avatar).to.be.a(\"string\");\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 7. Verifica se email retornado é igual ao enviado no body\r",
+							"// ===============================\r",
+							"pm.test(\"Email retornado corresponde ao enviado\", function () {\r",
+							"    let req = pm.request.body ? pm.request.body.raw : null;\r",
+							"\r",
+							"    if (req) {\r",
+							"        let sent = JSON.parse(req);\r",
+							"        pm.expect(loginData.user.email).to.eql(sent.email);\r",
+							"    }\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 8. Salva o token\r",
+							"// ===============================\r",
+							"pm.test(\"Salvar token\", function () {\r",
+							"    if (loginData.access_token) {\r",
+							"        pm.environment.set(\"token\", loginData.access_token);\r",
+							"        console.log(\"TOKEN SALVO:\", loginData.access_token);\r",
+							"    } else {\r",
+							"        console.log(\"Nenhum token encontrado para salvar\");\r",
+							"    }\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"D@gmail.com\",\r\n  \"password\": \"senha123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/auth/login",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Mostrar usuário logado",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Converte a resposta para JSON\r",
+							"const meData = pm.response.json();\r",
+							"\r",
+							"// ===============================\r",
+							"// 1. Status HTTP\r",
+							"// ===============================\r",
+							"pm.test(\"Status code é 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 2. access_token existe e é string\r",
+							"// ===============================\r",
+							"pm.test(\"Possui access_token válido\", function () {\r",
+							"    pm.expect(meData).to.have.property(\"access_token\");\r",
+							"    pm.expect(meData.access_token).to.be.a(\"string\").and.not.empty;\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 3. token_type existe e é string\r",
+							"// ===============================\r",
+							"pm.test(\"token_type existe e é válido\", function () {\r",
+							"    pm.expect(meData).to.have.property(\"token_type\");\r",
+							"    pm.expect(meData.token_type).to.be.a(\"string\").and.not.empty;\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 4. Verifica campo user\r",
+							"// ===============================\r",
+							"pm.test(\"Campo user existe e é um objeto\", function () {\r",
+							"    pm.expect(meData).to.have.property(\"user\");\r",
+							"    pm.expect(meData.user).to.be.an(\"object\");\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 5. Verifica user possui id, username, email e avatar\r",
+							"// ===============================\r",
+							"pm.test(\"User possui os campos obrigatórios\", function () {\r",
+							"    pm.expect(meData.user).to.have.property(\"id\");\r",
+							"    pm.expect(meData.user).to.have.property(\"username\");\r",
+							"    pm.expect(meData.user).to.have.property(\"email\");\r",
+							"    pm.expect(meData.user).to.have.property(\"avatar\");\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 6. Tipos dos campos de user\r",
+							"// ===============================\r",
+							"pm.test(\"Tipos dos campos de user estão corretos\", function () {\r",
+							"    pm.expect(meData.user.id).to.be.a(\"number\");\r",
+							"    pm.expect(meData.user.username).to.be.a(\"string\");\r",
+							"    pm.expect(meData.user.email).to.be.a(\"string\");\r",
+							"    pm.expect(meData.user.avatar).to.be.a(\"string\");\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 7. Verifica formato de e-mail\r",
+							"// ===============================\r",
+							"pm.test(\"Email do usuário tem formato válido\", function () {\r",
+							"    pm.expect(meData.user.email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/);\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 8. Salvar token em variável global\r",
+							"// ===============================\r",
+							"pm.test(\"Salvar token para uso em outras requisições\", function () {\r",
+							"    pm.globals.set(\"token\", meData.access_token);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({\r",
+							"    key: \"Authorization\",\r",
+							"    value: `Bearer ${pm.environment.get(\"token\")}`\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/auth/me",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"auth",
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Atualizar nick do usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Converte a resposta para JSON\r",
+							"const updateData = pm.response.json();\r",
+							"\r",
+							"// ===============================\r",
+							"// 1. Verifica status 200\r",
+							"// ===============================\r",
+							"pm.test(\"Status code é 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 2. Verifica que id existe e é número\r",
+							"// ===============================\r",
+							"pm.test(\"Campo id existe e é número\", function () {\r",
+							"    pm.expect(updateData).to.have.property(\"id\");\r",
+							"    pm.expect(updateData.id).to.be.a(\"number\");\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 3. username existe e é string\r",
+							"// ===============================\r",
+							"pm.test(\"Campo username existe e é string\", function () {\r",
+							"    pm.expect(updateData).to.have.property(\"username\");\r",
+							"    pm.expect(updateData.username).to.be.a(\"string\").and.not.empty;\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 4. email existe e é string\r",
+							"// ===============================\r",
+							"pm.test(\"Campo email existe e é string\", function () {\r",
+							"    pm.expect(updateData).to.have.property(\"email\");\r",
+							"    pm.expect(updateData.email).to.be.a(\"string\").and.not.empty;\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 5. avatar existe e é string\r",
+							"// ===============================\r",
+							"pm.test(\"Campo avatar existe e é string\", function () {\r",
+							"    pm.expect(updateData).to.have.property(\"avatar\");\r",
+							"    pm.expect(updateData.avatar).to.be.a(\"string\").and.not.empty;\r",
+							"});\r",
+							"\r",
+							"// ===============================\r",
+							"// 6. Valida formato básico do e-mail\r",
+							"// ===============================\r",
+							"pm.test(\"Email tem formato válido\", function () {\r",
+							"    pm.expect(updateData.email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({\r",
+							"    key: \"Authorization\",\r",
+							"    value: `Bearer ${pm.environment.get(\"token\")}`\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"username\": \"DALLVA\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/auth/me/username",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"auth",
+						"me",
+						"username"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deletar Usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code é 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({\r",
+							"    key: \"Authorization\",\r",
+							"    value: `Bearer ${pm.environment.get(\"token\")}`\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/auth/me",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"auth",
+						"me"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,957 @@
+{
+	"info": {
+		"_postman_id": "84993647-dd13-4b8d-afe2-3cbe8aac6385",
+		"name": "Cinelist - Media",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44926338",
+		"_collection_link": "https://interstellar-satellite-9627242.postman.co/workspace/Marcus-Vin%C3%ADcius's-Workspace~855b6e5c-4ec4-416d-827e-181b42c7a1aa/collection/44926338-84993647-dd13-4b8d-afe2-3cbe8aac6385?action=share&source=collection_link&creator=44926338"
+	},
+	"item": [
+		{
+			"name": "Buscando os 20 animes, series e filmes mais populares",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ✅ Verifica se o status é 200\r",
+							"pm.test(\"Status deve ser 200 (OK)\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// ✅ Verifica se o corpo da resposta é um JSON válido\r",
+							"pm.test(\"Resposta deve ser um JSON válido\", function () {\r",
+							"    pm.response.to.be.withBody;\r",
+							"    pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"// ✅ Verifica se existe a chave \"results\" e se é um array\r",
+							"pm.test(\"A resposta deve conter o campo 'results' como um array\", function () {\r",
+							"    pm.expect(jsonData).to.have.property(\"results\");\r",
+							"    pm.expect(jsonData.results).to.be.an(\"array\").that.is.not.empty;\r",
+							"});\r",
+							"\r",
+							"// ✅ Verifica campos principais (mas tolera ausentes)\r",
+							"pm.test(\"Cada item deve conter os campos essenciais (quando aplicável)\", function () {\r",
+							"    jsonData.results.forEach((item) => {\r",
+							"        pm.expect(item).to.have.property(\"id\");\r",
+							"        pm.expect(item).to.have.property(\"type\");\r",
+							"        pm.expect(item.id).to.be.a(\"number\");\r",
+							"\r",
+							"        // Só valida se o campo existir\r",
+							"        if (item.hasOwnProperty(\"popularity\")) {\r",
+							"            pm.expect(item.popularity).to.be.a(\"number\");\r",
+							"        }\r",
+							"        if (item.hasOwnProperty(\"vote_average\")) {\r",
+							"            pm.expect(item.vote_average).to.be.a(\"number\");\r",
+							"        }\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"// ✅ Verifica se há pelo menos um filme, uma série e um anime\r",
+							"pm.test(\"A lista deve conter pelo menos 1 filme, 1 série e 1 anime\", function () {\r",
+							"    const types = jsonData.results.map(i => i.type);\r",
+							"    pm.expect(types).to.include(\"movie\");\r",
+							"    pm.expect(types).to.include(\"serie\");\r",
+							"    pm.expect(types).to.include(\"anime\");\r",
+							"});\r",
+							"\r",
+							"// ✅ Verifica se os IDs são numéricos\r",
+							"pm.test(\"IDs dos itens devem ser numéricos\", function () {\r",
+							"    jsonData.results.forEach((item) => {\r",
+							"        pm.expect(item.id).to.be.a(\"number\");\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"// ✅ Verifica se a média de votos está entre 0 e 10 (quando existir)\r",
+							"pm.test(\"Média de votos deve estar entre 0 e 10 (se existir)\", function () {\r",
+							"    jsonData.results.forEach((item) => {\r",
+							"        if (item.vote_average !== undefined && item.vote_average !== null) {\r",
+							"            pm.expect(item.vote_average).to.be.within(0, 10);\r",
+							"        }\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"// ✅ Verifica se a popularidade é positiva (quando existir)\r",
+							"pm.test(\"Popularidade deve ser positiva (se existir)\", function () {\r",
+							"    jsonData.results.forEach((item) => {\r",
+							"        if (item.popularity !== undefined && item.popularity !== null) {\r",
+							"            pm.expect(item.popularity).to.be.above(0);\r",
+							"        }\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"// ✅ Verifica se há título ou nome, mesmo que venha como objeto\r",
+							"pm.test(\"Itens devem possuir 'title' ou 'name' definidos (aceita objeto)\", function () {\r",
+							"    jsonData.results.forEach((item) => {\r",
+							"        const titleOrName = item.title || item.name;\r",
+							"        pm.expect(titleOrName, \"Título ou nome deve estar presente\").to.exist;\r",
+							"    });\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/popular",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"popular"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Pesquisando mídia por nome",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ✅ Verifica se o status é 200 (OK)\r",
+							"pm.test(\"Status deve ser 200 (OK)\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// ✅ Verifica se o corpo da resposta é JSON\r",
+							"pm.test(\"Resposta deve ser um JSON válido\", function () {\r",
+							"    pm.response.to.be.withBody;\r",
+							"    pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"// ✅ Pega o corpo da resposta\r",
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"// ✅ Verifica se a resposta é um array ou contém \"results\"\r",
+							"pm.test(\"A resposta deve conter um array de resultados\", function () {\r",
+							"    if (Array.isArray(jsonData)) {\r",
+							"        pm.expect(jsonData.length, \"A lista não deve estar vazia\").to.be.above(0);\r",
+							"    } else if (jsonData.results) {\r",
+							"        pm.expect(jsonData.results).to.be.an(\"array\").that.is.not.empty;\r",
+							"    } else {\r",
+							"        pm.expect.fail(\"Formato inesperado de resposta (não é array nem contém 'results')\");\r",
+							"    }\r",
+							"});\r",
+							"\r",
+							"// ✅ Extrai o termo pesquisado do corpo da requisição\r",
+							"const requestBody = JSON.parse(pm.request.body.raw);\r",
+							"const searchTerm = requestBody.name.toLowerCase();\r",
+							"\r",
+							"// ✅ Verifica se o termo pesquisado aparece nos títulos ou nomes retornados\r",
+							"pm.test(`Resultados devem conter o termo pesquisado: '${searchTerm}'`, function () {\r",
+							"    const items = Array.isArray(jsonData) ? jsonData : jsonData.results;\r",
+							"    const foundMatch = items.some(item => {\r",
+							"        const title = (item.title || item.name || \"\").toString().toLowerCase();\r",
+							"        return title.includes(searchTerm);\r",
+							"    });\r",
+							"    pm.expect(foundMatch, `Nenhum resultado contém o termo '${searchTerm}'`).to.be.true;\r",
+							"});\r",
+							"\r",
+							"// ✅ Verifica se cada item tem um ID numérico e um tipo\r",
+							"pm.test(\"Cada resultado deve conter campos essenciais (id e tipo)\", function () {\r",
+							"    const items = Array.isArray(jsonData) ? jsonData : jsonData.results;\r",
+							"    items.forEach(item => {\r",
+							"        pm.expect(item).to.have.property(\"id\");\r",
+							"        pm.expect(item.id).to.be.a(\"number\");\r",
+							"        pm.expect(item).to.have.property(\"type\");\r",
+							"    });\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Death Note\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/search",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Avaliando mídia e salvando no BD",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ✅ Verifica se o status é 200 (OK) ou 201 (Created)\r",
+							"pm.test(\"Status deve ser 200 (OK) ou 201 (Created)\", function () {\r",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+							"});\r",
+							"\r",
+							"// ✅ Verifica se a resposta é um JSON válido\r",
+							"pm.test(\"Resposta deve ser JSON válido\", function () {\r",
+							"    pm.response.to.be.withBody;\r",
+							"    pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							"// ✅ Extrai o corpo da resposta\r",
+							"const jsonData = pm.response.json();\r",
+							"\r",
+							"// ✅ Verifica se contém mensagem de confirmação ou campos esperados\r",
+							"pm.test(\"Resposta deve conter mensagem ou dados da avaliação\", function () {\r",
+							"    pm.expect(jsonData).to.be.an(\"object\");\r",
+							"    pm.expect(jsonData).to.have.any.keys(\"message\", \"rating\", \"title\", \"media_id\");\r",
+							"});\r",
+							"\r",
+							"// ✅ Extrai o body da requisição (dados enviados)\r",
+							"const requestData = JSON.parse(pm.request.body.raw);\r",
+							"\r",
+							"// ✅ Testa se o body enviado possui os campos corretos\r",
+							"pm.test(\"Body enviado deve conter todos os campos obrigatórios\", function () {\r",
+							"    const expectedKeys = [\"media_type\", \"media_id\", \"rating\", \"comment\", \"user_id\"];\r",
+							"    expectedKeys.forEach(key => {\r",
+							"        pm.expect(requestData, `Campo ausente: ${key}`).to.have.property(key);\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"// ✅ Testa se o rating está dentro do intervalo permitido (0 a 10)\r",
+							"pm.test(\"Rating deve estar entre 0 e 10\", function () {\r",
+							"    pm.expect(requestData.rating, \"Rating fora do intervalo\").to.be.within(0, 10);\r",
+							"});\r",
+							"\r",
+							"// ✅ Testa se o media_id e user_id são numéricos\r",
+							"pm.test(\"media_id e user_id devem ser números válidos\", function () {\r",
+							"    pm.expect(requestData.media_id).to.be.a(\"number\");\r",
+							"    pm.expect(requestData.user_id).to.be.a(\"number\");\r",
+							"});\r",
+							"\r",
+							"// ✅ Testa se media_type é string e não vazia\r",
+							"pm.test(\"media_type deve ser uma string válida\", function () {\r",
+							"    pm.expect(requestData.media_type).to.be.a(\"string\").and.not.empty;\r",
+							"});\r",
+							"\r",
+							"// ✅ Se houver campo 'rating' na resposta, valida consistência\r",
+							"pm.test(\"Rating retornado deve corresponder ao enviado (se presente)\", function () {\r",
+							"    if (jsonData.rating !== undefined) {\r",
+							"        pm.expect(jsonData.rating).to.eql(requestData.rating);\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"media_type\": \"Anime\",\r\n  \"media_id\": 7,\r\n  \"rating\": 10,\r\n  \"comment\": \"Muito Massa\",\r\n  \"user_id\": 10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/rate",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"rate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Retornando mídias avaliadas por um usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code é 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Possui campo 'results' e é uma lista\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json).to.have.property(\"results\");\r",
+							"    pm.expect(json.results).to.be.an(\"array\");\r",
+							"    pm.expect(json.results.length).to.be.greaterThan(0);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Cada mídia tem campos esperados\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    json.results.forEach(item => {\r",
+							"        pm.expect(item).to.have.property(\"id\");\r",
+							"        pm.expect(item).to.have.property(\"title\");\r",
+							"        pm.expect(item).to.have.property(\"user_id\");\r",
+							"        pm.expect(item.user_id).to.eql(10);\r",
+							"        pm.expect([\"movie\", \"anime\", \"series\"]).to.include(item.type);\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Campos opcionais possuem tipos corretos\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    json.results.forEach(item => {\r",
+							"        if (item.poster_path) pm.expect(item.poster_path).to.be.a(\"string\");\r",
+							"        if (item.backdrop_path) pm.expect(item.backdrop_path).to.be.a(\"string\");\r",
+							"\r",
+							"        // Se for movie, pode ter rating\r",
+							"        if (item.type === \"movie\" && item.rating !== undefined) {\r",
+							"            pm.expect(item.rating).to.be.a(\"number\");\r",
+							"        }\r",
+							"\r",
+							"        // Se for anime, pode ter score\r",
+							"        if (item.type === \"anime\" && item.score !== undefined) {\r",
+							"            pm.expect(item.score).to.be.a(\"number\");\r",
+							"        }\r",
+							"\r",
+							"        // Se for série, pode ter seasons ou episodes\r",
+							"        if (item.type === \"series\" && item.seasons !== undefined) {\r",
+							"            pm.expect(item.seasons).to.be.a(\"number\");\r",
+							"        }\r",
+							"    });\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"user_id\": 10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/rate/user/get",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"rate",
+						"user",
+						"get"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Atualiza avaliação do usuário a uma mídia",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code é 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Resposta contém mensagem de sucesso\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json).to.have.property(\"message\");\r",
+							"    pm.expect(json.message).to.match(/atualizada/i);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Campos obrigatórios estão presentes\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json).to.have.property(\"id\");\r",
+							"    pm.expect(json).to.have.property(\"title\");\r",
+							"    pm.expect(json).to.have.property(\"rating\");\r",
+							"    pm.expect(json).to.have.property(\"comment\");\r",
+							"    pm.expect(json).to.have.property(\"type\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Campos têm tipos corretos\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json.id).to.be.a(\"number\");\r",
+							"    pm.expect(json.title).to.be.a(\"string\");\r",
+							"    pm.expect(json.rating).to.be.a(\"number\");\r",
+							"    pm.expect(json.comment).to.be.a(\"string\");\r",
+							"    pm.expect([\"movie\", \"anime\", \"series\"]).to.include(json.type);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Nota está dentro do intervalo esperado\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json.rating).to.be.within(0, 10);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"media_type\": \"anime\",\r\n  \"media_id\": 7,\r\n  \"rating\": 7,\r\n  \"comment\": \"maomeno\",\r\n  \"user_id\": 10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/rate/update",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"rate",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deleta avaliação do usuário a uma mídia",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code é 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Resposta contém mensagem de sucesso\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json).to.have.property(\"message\");\r",
+							"    pm.expect(json.message).to.match(/removido/i);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Campos obrigatórios estão presentes\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json).to.have.property(\"id\");\r",
+							"    pm.expect(json).to.have.property(\"title\");\r",
+							"    pm.expect(json).to.have.property(\"type\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Tipos dos campos estão corretos\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json.id).to.be.a(\"number\");\r",
+							"    pm.expect(json.title).to.be.a(\"string\");\r",
+							"    pm.expect([\"movie\", \"anime\", \"series\"]).to.include(json.type);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Mensagem contém o tipo correto\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json.message.toLowerCase()).to.include(json.type);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"media_type\": \"anime\",\r\n  \"media_id\": 7,\r\n  \"user_id\": 10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/rate/delete",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"rate",
+						"delete"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cria lista",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code é 200 ou 201\", function () {\r",
+							"    pm.expect([200, 201]).to.include(pm.response.code);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Resposta possui os campos esperados\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json).to.have.all.keys('nome', 'description', 'id', 'user_id');\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Tipos dos campos estão corretos\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json.nome).to.be.a('string');\r",
+							"    pm.expect(json.description).to.be.a('string');\r",
+							"    pm.expect(json.id).to.be.a('number');\r",
+							"    pm.expect(json.user_id).to.be.a('number');\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Valores básicos fazem sentido\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    pm.expect(json.nome.length).to.be.greaterThan(0);\r",
+							"    pm.expect(json.description.length).to.be.greaterThan(0);\r",
+							"    pm.expect(json.id).to.be.above(0);\r",
+							"    pm.expect(json.user_id).to.eql(10);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"nome\": \"string\",\r\n  \"description\": \"string\",\r\n  \"user_id\": 10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/listas/create",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"listas",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Adiciona item à lista",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"setTimeout(() => {\r",
+							"    const jsonData = pm.response.json();\r",
+							"\r",
+							"    pm.test(\"Status code é 200\", function () {\r",
+							"        pm.response.to.have.status(200);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Resposta contém os campos esperados\", function () {\r",
+							"        pm.expect(jsonData).to.have.property(\"media_type\");\r",
+							"        pm.expect(jsonData).to.have.property(\"media_id\");\r",
+							"        pm.expect(jsonData).to.have.property(\"media_title\");\r",
+							"        pm.expect(jsonData).to.have.property(\"lista_id\");\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Tipo de mídia é válido\", function () {\r",
+							"        pm.expect([\"anime\", \"serie\", \"filme\"]).to.include(jsonData.media_type);\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Título da mídia foi retornado corretamente\", function () {\r",
+							"        pm.expect(jsonData.media_title).to.be.a(\"string\");\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"lista_id é um número válido\", function () {\r",
+							"        pm.expect(jsonData.lista_id).to.be.a(\"number\");\r",
+							"    });\r",
+							"\r",
+							"}, 1000); // espera 1 segundo\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"lista_id\": 32,\r\n  \"nome\": \"DEATH NOTE\",\r\n  \"user_id\": 10,\r\n  \"media_type\": \"anime\",\r\n  \"media_id\": 1535,\r\n  \"title\": \"DEATH NOTE\",\r\n  \"poster_path\": \"https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx1535-kUgkcrfOrkUM.jpg\",\r\n  \"backdrop_path\": \"https://s4.anilist.co/file/anilistcdn/media/anime/banner/1535.jpg\",\r\n  \"overview\": \"Light Yagami is a genius high school student who is about to learn about life through a book of death...\",\r\n  \"vote_average\": 84,\r\n  \"release_date\": null,\r\n  \"first_air_date\": \"2006-10-04\",\r\n  \"startDate\": {\r\n    \"year\": 2006,\r\n    \"month\": 10,\r\n    \"day\": 4\r\n  }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/listas/item/add",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"listas",
+						"item",
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deleta um item da lista",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"setTimeout(() => {\r",
+							"    const jsonData = pm.response.json();\r",
+							"\r",
+							"    pm.test(\"Status code é 200\", function () {\r",
+							"        pm.response.to.have.status(200);\r",
+							"    });\r",
+							"\r",
+							"}, 1000); // espera 1 segundo"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"lista_id\": 32,\r\n  \"nome\": \"DEATH NOTE\",\r\n  \"user_id\": 10,\r\n  \"media_type\": \"anime\",\r\n  \"media_id\": 1535,\r\n  \"title\": \"DEATH NOTE\",\r\n  \"poster_path\": \"https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx1535-kUgkcrfOrkUM.jpg\",\r\n  \"backdrop_path\": \"https://s4.anilist.co/file/anilistcdn/media/anime/banner/1535.jpg\",\r\n  \"overview\": \"Light Yagami is a genius high school student who is about to learn about life through a book of death...\",\r\n  \"vote_average\": 84,\r\n  \"release_date\": null,\r\n  \"first_air_date\": \"2006-10-04\",\r\n  \"startDate\": {\r\n    \"year\": 2006,\r\n    \"month\": 10,\r\n    \"day\": 4\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/listas/item/delete",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"listas",
+						"item",
+						"delete"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Retorna uma lista do usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code é 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Resposta contém campos obrigatórios da lista\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property(\"nome\");\r",
+							"    pm.expect(jsonData).to.have.property(\"description\");\r",
+							"    pm.expect(jsonData).to.have.property(\"id\");\r",
+							"    pm.expect(jsonData).to.have.property(\"user_id\");\r",
+							"    pm.expect(jsonData).to.have.property(\"itens\");\r",
+							"    pm.expect(jsonData).to.have.property(\"item_count\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Itens da lista são válidos\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.itens).to.be.an(\"array\");\r",
+							"    pm.expect(jsonData.item_count).to.eql(jsonData.itens.length);\r",
+							"\r",
+							"    if (jsonData.itens.length > 0) {\r",
+							"        const item = jsonData.itens[0];\r",
+							"        pm.expect(item).to.have.property(\"media_type\");\r",
+							"        pm.expect(item).to.have.property(\"media_id\");\r",
+							"        pm.expect(item).to.have.property(\"media_title\");\r",
+							"        pm.expect(item).to.have.property(\"id\");\r",
+							"        pm.expect(item).to.have.property(\"lista_id\");\r",
+							"        pm.expect([\"anime\", \"serie\", \"filme\"]).to.include(item.media_type);\r",
+							"        pm.expect(item.lista_id).to.eql(jsonData.id);\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"lista_id\": 32\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/listas/get",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"listas",
+						"get"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Retorna todas as listas do usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code é 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Resposta é um array de listas\", function () {\r",
+							"    const listas = pm.response.json();\r",
+							"    pm.expect(listas).to.be.an(\"array\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verifica campos de cada lista e consistência de itens\", function () {\r",
+							"    const listas = pm.response.json();\r",
+							"\r",
+							"    listas.forEach((lista) => {\r",
+							"        pm.expect(lista).to.have.property(\"nome\");\r",
+							"        pm.expect(lista).to.have.property(\"description\");\r",
+							"        pm.expect(lista).to.have.property(\"id\");\r",
+							"        pm.expect(lista).to.have.property(\"user_id\");\r",
+							"        pm.expect(lista).to.have.property(\"itens\");\r",
+							"        pm.expect(lista).to.have.property(\"item_count\");\r",
+							"\r",
+							"        pm.expect(lista.user_id).to.eql(10);\r",
+							"        pm.expect(lista.itens.length).to.eql(lista.item_count);\r",
+							"\r",
+							"        lista.itens.forEach((item) => {\r",
+							"            pm.expect(item).to.have.property(\"media_type\");\r",
+							"            pm.expect(item).to.have.property(\"media_id\");\r",
+							"            pm.expect(item).to.have.property(\"media_title\");\r",
+							"            pm.expect(item).to.have.property(\"id\");\r",
+							"            pm.expect(item).to.have.property(\"lista_id\");\r",
+							"            pm.expect([\"anime\", \"serie\", \"movie\"]).to.include(item.media_type);\r",
+							"            pm.expect(item.lista_id).to.eql(lista.id);\r",
+							"        });\r",
+							"    });\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"user_id\": 10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/listas/user/get",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"listas",
+						"user",
+						"get"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deletar lista de um usuário",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code é 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Resposta contém mensagem de sucesso\", function () {\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData).to.have.property(\"message\");\r",
+							"    pm.expect(jsonData.message).to.include(\"Lista removida\");\r",
+							"});\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"user_id\": 10,\r\n  \"lista_id\": 34\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://cinelist-backend-production.up.railway.app/media/listas/delete",
+					"protocol": "https",
+					"host": [
+						"cinelist-backend-production",
+						"up",
+						"railway",
+						"app"
+					],
+					"path": [
+						"media",
+						"listas",
+						"delete"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

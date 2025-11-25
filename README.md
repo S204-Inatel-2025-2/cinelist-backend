@@ -1,5 +1,7 @@
 # Cinelist Backend
 
+> **Acesse o projeto online:** [CineList](https://mycinelist.vercel.app/home)
+
 Uma API completa para gestão de listas, avaliações e catálogo de filmes, séries e animes, integrada a TMDB e AniList.
 
 ---
